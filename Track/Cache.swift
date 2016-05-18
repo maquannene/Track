@@ -32,13 +32,12 @@ public class Cache {
         self.diskCache = DiskCache(name: name, path: path)
     }
     
-    public convenience init(name: String) {
+    public convenience init(name: String){
         self.init(name: name, path: NSSearchPathForDirectoriesInDomains(.CachesDirectory, .UserDomainMask, true)[0])
     }
     
     //  Async
     public func set(object object: NSCoding, forKey key: String, completion: CacheAsyncCompletion?) {
-        
         var group: dispatch_group_t? = nil
         var memorySetCompletion: MemoryCacheAsyncCompletion?
         var diskSetCompletion: DiskCacheAsyncCompletion?
@@ -64,7 +63,6 @@ public class Cache {
     }
     
     public func object(forKey key: String, completion: CacheAsyncCompletion?) {
-        
         dispatch_async(queue) { [weak self] in
             guard let strongSelf = self else { return }
             strongSelf.memoryCache.object(forKey: key) { [weak self] (cache, key, object) in

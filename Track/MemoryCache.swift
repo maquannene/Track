@@ -27,7 +27,7 @@ public typealias MemoryCacheAsyncCompletion = (cache: MemoryCache?, key: String,
 
 public class MemoryCache {
     
-    private var cache: Dictionary = [String : AnyObject]()
+    private var cache: NSMutableDictionary = NSMutableDictionary()
     
     private let queue: dispatch_queue_t = dispatch_queue_create(TrackCachePrefix + String(MemoryCache), DISPATCH_QUEUE_CONCURRENT)
     

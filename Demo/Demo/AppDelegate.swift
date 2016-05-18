@@ -16,44 +16,65 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
         
-        var startTime: NSDate!
+        let printTime: (() -> Void) -> Void = {
+            let startTime: NSDate = NSDate()
+            $0()
+            print(startTime.timeIntervalSinceNow)
+        }
+        
+        var dd = [String : AnyObject]()
+        printTime {
+            for i in 0 ... 200000 {
+                dd["\(i)"] = "\(i)"
+            }
+        }
+        
+        let dic = NSMutableDictionary()
+        printTime {
+            for i in 0 ... 200000 {
+                dic["\(i)"] = "\(i)"
+            }
+        }
+        
+        printTime {
+            for i in 0 ... 200000 {
+                let x = dd["\(i)"]
+            }
+        }
+        
+        printTime {
+            for i in 0 ... 200000 {
+                let x = dic["\(i)"]
+            }
+        }
         
 //        //  TM
 //        let t = TMDiskCache.sharedCache()
-//        
-//        startTime = NSDate()
 //
-//        for i in 0 ... 2000 {
-////            print(" i = \(i)")
-//            t.setObject("sfdsf", forKey: "\(i)")
+//        printTime {
+//            for i in 0 ... 2000 {
+//                //            print(" i = \(i)")
+//                t.setObject("sfdsf", forKey: "\(i)")
+//            }
 //        }
-//        
-//        print(startTime.timeIntervalSinceNow)
 //        
 //        //  PIN
 //        let p = PINDiskCache.sharedCache()
 //        
-//        startTime = NSDate()
-//        
-//        for i in 0 ... 2000 {
-////            print(" p = \(i)")
-//            p.setObject("213", forKey: "\(i)")
+//        printTime {
+//            for i in 0 ... 2000 {
+//                //            print(" p = \(i)")
+//                p.setObject("213", forKey: "\(i)")
+//            }
 //        }
-//    
-//        print(startTime.timeIntervalSinceNow)
-        
-        
-        //  Track
-        let Tr = Cache.shareInstance
-        
-        startTime = NSDate()
-        
-        for i in 0 ... 5 {
-//            print(" p = \(i)")
-            Tr.set(object: "213", forKey: "\(i)")
-        }
-        print(startTime.timeIntervalSinceNow)
-        
+//        //  Track
+//        let Tr = Cache.shareInstance
+//        printTime {
+//            for i in 0 ... 5 {
+//                //            print(" p = \(i)")
+//                Tr.set(object: "213", forKey: "\(i)")
+//            }
+//        }
         return true
     }
 
