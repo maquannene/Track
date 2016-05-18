@@ -8,7 +8,7 @@
 
 import Foundation
 
-public typealias CacheAsyncCompletion = (cache: Cache?, key: String, object: AnyObject?) -> Void
+public typealias CacheAsyncCompletion = (cache: Cache?, key: String?, object: AnyObject?) -> Void
 
 let TrackCachePrefix: String = "com.trackcache."
 
@@ -65,24 +65,32 @@ public class Cache {
     public func object(forKey key: String, completion: CacheAsyncCompletion?) {
         dispatch_async(queue) { [weak self] in
             guard let strongSelf = self else { return }
-            strongSelf.memoryCache.object(forKey: key) { [weak self] (cache, key, object) in
+            strongSelf.memoryCache.object(forKey: key) { [weak self] (memCache, memKey, memObject) in
                 guard let strongSelf = self else { return }
-                if object != nil {
+                if memObject != nil {
                     dispatch_async(strongSelf.queue, {
-                        completion?(cache: strongSelf, key: key, object: object)
+                        completion?(cache: strongSelf, key: memKey, object: memObject)
                     })
                 }
                 else {
-                    strongSelf.diskCache.object(forKey: key) { [weak self] (cache, key, object) in
+                    strongSelf.diskCache.object(forKey: key) { [weak self] (diskCache, diskKey, diskObject) in
                         guard let strongSelf = self else { return }
-                        strongSelf.memoryCache.set(object: object, forKey: key, completion: nil)
+                        strongSelf.memoryCache.set(object: diskCache, forKey: diskKey, completion: nil)
                         dispatch_async(strongSelf.queue, {
-                            completion?(cache: strongSelf, key: key, object: object)
+                            completion?(cache: strongSelf, key: diskKey, object: diskObject)
                         })
                     }
                 }
             }
         }
+    }
+    
+    public func removeObject(forKey key: String, completion: CacheAsyncCompletion?) {
+
+    }
+    
+    public func removeAllObject(completion: CacheAsyncCompletion?) {
+
     }
     
     //  Sync
@@ -103,6 +111,15 @@ public class Cache {
         return nil
     }
     
+    public func removeObject(forKey key: String) {
+        memoryCache.removeObject(forKey: key)
+        diskCache.removeObject(forKey: key)
+    }
+    
+    public func removeAllObject() {
+        memoryCache.removeAllObject()
+        diskCache.removeAllObject()
+    }
 }
 
 

@@ -22,31 +22,31 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             print(startTime.timeIntervalSinceNow)
         }
         
-        var dd = [String : AnyObject]()
-        printTime {
-            for i in 0 ... 200000 {
-                dd["\(i)"] = "\(i)"
-            }
-        }
-        
-        let dic = NSMutableDictionary()
-        printTime {
-            for i in 0 ... 200000 {
-                dic["\(i)"] = "\(i)"
-            }
-        }
-        
-        printTime {
-            for i in 0 ... 200000 {
-                let x = dd["\(i)"]
-            }
-        }
-        
-        printTime {
-            for i in 0 ... 200000 {
-                let x = dic["\(i)"]
-            }
-        }
+//        var dd = [String : AnyObject]()
+//        printTime {
+//            for i in 0 ... 200000 {
+//                dd["\(i)"] = "\(i)"
+//            }
+//        }
+//        
+//        let dic = NSMutableDictionary()
+//        printTime {
+//            for i in 0 ... 200000 {
+//                dic["\(i)"] = "\(i)"
+//            }
+//        }
+//        
+//        printTime {
+//            for i in 0 ... 200000 {
+//                let x = dd["\(i)"]
+//            }
+//        }
+//        
+//        printTime {
+//            for i in 0 ... 200000 {
+//                let x = dic["\(i)"]
+//            }
+//        }
         
 //        //  TM
 //        let t = TMDiskCache.sharedCache()
@@ -67,14 +67,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 //                p.setObject("213", forKey: "\(i)")
 //            }
 //        }
-//        //  Track
-//        let Tr = Cache.shareInstance
-//        printTime {
-//            for i in 0 ... 5 {
-//                //            print(" p = \(i)")
-//                Tr.set(object: "213", forKey: "\(i)")
-//            }
-//        }
+        
+        //  Track
+        let Tr = Cache.shareInstance
+        printTime {
+            for i in 0 ... 5 {
+                //            print(" p = \(i)")
+                Tr.set(object: "213", forKey: "\(i)")
+            }
+        }
+        
         return true
     }
 

@@ -23,7 +23,7 @@
 
 import Foundation
 
-public typealias MemoryCacheAsyncCompletion = (cache: MemoryCache?, key: String, object: AnyObject?) -> Void
+public typealias MemoryCacheAsyncCompletion = (cache: MemoryCache?, key: String?, object: AnyObject?) -> Void
 
 public class MemoryCache {
     
@@ -42,39 +42,70 @@ public class MemoryCache {
     //  Async
     public func set(object object: AnyObject!, forKey key: String!, completion: MemoryCacheAsyncCompletion?) {
         dispatch_async(queue) { [weak self] in
-            guard let sSelf = self else { completion?(cache: nil, key: key, object: object); return }
-            sSelf.set(object: object, forKey: key)
-            completion?(cache: sSelf, key: key, object: object)
+            guard let strongSelf = self else { completion?(cache: nil, key: key, object: object); return }
+            strongSelf.set(object: object, forKey: key)
+            completion?(cache: strongSelf, key: key, object: object)
         }
     }
     
     public func object(forKey key: String, completion: MemoryCacheAsyncCompletion?) {
         dispatch_async(queue) { [weak self] in
-            guard let sSelf = self else { completion?(cache: nil, key: key, object: nil); return }
-            let object = sSelf.object(forKey: key)
-            completion?(cache: sSelf, key: key, object: object)
+            guard let strongSelf = self else { completion?(cache: nil, key: key, object: nil); return }
+            let object = strongSelf.object(forKey: key)
+            completion?(cache: strongSelf, key: key, object: object)
+        }
+    }
+    
+    public func removeObject(forKey key: String, completion: MemoryCacheAsyncCompletion?) {
+        dispatch_async(queue) { [weak self] in
+            guard let strongSelf = self else { completion?(cache: nil, key: key, object: nil); return }
+            strongSelf.removeObject(forKey: key)
+            completion?(cache: strongSelf, key: key, object: nil)
+        }
+    }
+    
+    public func removeAllObject(completion: MemoryCacheAsyncCompletion?) {
+        dispatch_async(queue) { [weak self] in
+            guard let strongSelf = self else { completion?(cache: nil, key: nil, object: nil); return }
+            strongSelf.removeAllObject()
+            completion?(cache: strongSelf, key: nil, object: nil)
         }
     }
     
     //  Sync
     public func set(object object: AnyObject, forKey key: String) {
-        lock()
-        cache[key] = object
-        unlock()
+        threadSafe {
+            self.cache[key] = object
+        }
     }
     
     public func object(forKey key: String) -> AnyObject? {
-        lock()
-        let object: AnyObject? = cache[key]
-        unlock()
+        var object: AnyObject? = nil
+        threadSafe {
+            object = self.cache[key]
+        }
         return object
     }
     
-    private func lock() {
+    public func removeObject(forKey key: String) {
+        threadSafe { 
+            self.cache.removeObjectForKey(key)
+        }
+    }
+    
+    public func removeAllObject() {
+        threadSafe {
+            self.cache.removeAllObjects()
+        }
+    }
+}
+
+extension MemoryCache: ThreadSafeProtocol {
+    func lock() {
         dispatch_semaphore_wait(semaphoreLock, DISPATCH_TIME_FOREVER)
     }
     
-    private func unlock() {
+    func unlock() {
         dispatch_semaphore_signal(semaphoreLock)
     }
 }
