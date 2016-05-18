@@ -15,7 +15,45 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
 
     func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
-        // Override point for customization after application launch.
+        
+        var startTime: NSDate!
+        
+//        //  TM
+//        let t = TMDiskCache.sharedCache()
+//        
+//        startTime = NSDate()
+//
+//        for i in 0 ... 2000 {
+////            print(" i = \(i)")
+//            t.setObject("sfdsf", forKey: "\(i)")
+//        }
+//        
+//        print(startTime.timeIntervalSinceNow)
+//        
+//        //  PIN
+//        let p = PINDiskCache.sharedCache()
+//        
+//        startTime = NSDate()
+//        
+//        for i in 0 ... 2000 {
+////            print(" p = \(i)")
+//            p.setObject("213", forKey: "\(i)")
+//        }
+//    
+//        print(startTime.timeIntervalSinceNow)
+        
+        
+        //  Track
+        let Tr = Cache.shareInstance
+        
+        startTime = NSDate()
+        
+        for i in 0 ... 5 {
+//            print(" p = \(i)")
+            Tr.set(object: "213", forKey: "\(i)")
+        }
+        print(startTime.timeIntervalSinceNow)
+        
         return true
     }
 
