@@ -37,7 +37,7 @@ public class MemoryCache {
     //  MARK: Public
     public static let shareInstance = MemoryCache()
     
-    init () {
+    public init () {
         
     }
     
@@ -98,6 +98,19 @@ public class MemoryCache {
     public func removeAllObject() {
         threadSafe {
             self.cache.removeAllObjects()
+        }
+    }
+    
+    public subscript(key: String) -> AnyObject? {
+        get {
+            return object(forKey: key)
+        }
+        set {
+            if let newValue = newValue {
+                set(object: newValue, forKey: key)
+            } else {
+                removeObject(forKey: key)
+            }
         }
     }
 }

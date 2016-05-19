@@ -10,9 +10,9 @@ import Foundation
 
 public typealias CacheAsyncCompletion = (cache: Cache?, key: String?, object: AnyObject?) -> Void
 
-let TrackCachePrefix: String = "com.trackcache."
+public let TrackCachePrefix: String = "com.trackcache."
 
-let TrackCacheDefauleName: String = "defauleTrackCache"
+public let TrackCacheDefauleName: String = "defauleTrackCache"
 
 public class Cache {
     
@@ -28,13 +28,16 @@ public class Cache {
     //  MARK: Public
     public static let shareInstance = Cache(name: TrackCacheDefauleName)
     
-    public init(name: String!, path: String) {
+    public init?(name: String!, path: String) {
+        if name.characters.count == 0 || path.characters.count == 0 {
+            return nil
+        }
+        self.diskCache = DiskCache(name: name, path: path)!
         self.name = name
         self.memoryCache = MemoryCache.shareInstance
-        self.diskCache = DiskCache(name: name, path: path)
     }
     
-    public convenience init(name: String){
+    public convenience init?(name: String){
         self.init(name: name, path: NSSearchPathForDirectoriesInDomains(.CachesDirectory, .UserDomainMask, true)[0])
     }
     
@@ -120,7 +123,24 @@ public class Cache {
         diskCache.removeAllObject()
     }
     
-    typealias OperationCompeltion = () -> Void
+    public subscript(key: String) -> NSCoding? {
+        get {
+            if let returnValue = object(forKey: key) as? NSCoding {
+                return returnValue
+            }
+            return nil
+        }
+        set {
+            if let newValue = newValue {
+                set(object: newValue, forKey: key)
+            }
+            else {
+                removeObject(forKey: key)
+            }
+        }
+    }
+    
+    private typealias OperationCompeltion = () -> Void
     
     //  MARK:
     //  MARK: Pirvate

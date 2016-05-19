@@ -24,6 +24,10 @@ import Foundation
 
 public typealias DiskCacheAsyncCompletion = (cache: DiskCache?, key: String?, object: AnyObject?) -> Void
 
+ private func _generateFileURL(key: String, path: NSURL) -> NSURL {
+    return path.URLByAppendingPathComponent(key)
+}
+
 public class DiskCache {
     
     public let name: String
@@ -38,7 +42,10 @@ public class DiskCache {
     //  MARK: Public
     public static let shareInstance = DiskCache(name: TrackCacheDefauleName)
     
-    public init(name: String!, path: String) {
+    public init?(name: String!, path: String) {
+        if name.characters.count == 0 || path.characters.count == 0 {
+            return nil
+        }
         self.name = name
         self.cacheURL = NSURL(string: path)!.URLByAppendingPathComponent(TrackCachePrefix + name, isDirectory: false)
         
@@ -49,7 +56,7 @@ public class DiskCache {
         }
     }
     
-    public convenience init(name: String) {
+    public convenience init?(name: String) {
         self.init(name: name, path: NSSearchPathForDirectoriesInDomains(.CachesDirectory, .UserDomainMask, true)[0])
     }
     
@@ -126,6 +133,23 @@ public class DiskCache {
         }
     }
     
+    public subscript(key: String) -> NSCoding? {
+        get {
+            if let returnValue = object(forKey: key) as? NSCoding {
+                return returnValue
+            }
+            return nil
+        }
+        set {
+            if let newValue = newValue {
+                set(object: newValue, forKey: key)
+            }
+            else {
+                removeObject(forKey: key)
+            }
+        }
+    }
+    
     //  MARK:
     //  MARK: Private
     private func _createCacheDir() -> Bool {
@@ -138,10 +162,6 @@ public class DiskCache {
             return false
         }
         return true
-    }
-    
-    private func _generateFileURL(key: String, path: NSURL) -> NSURL {
-        return path.URLByAppendingPathComponent(key)
     }
 }
 

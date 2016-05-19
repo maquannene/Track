@@ -74,7 +74,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         printTime {
             for i in 0 ... 2000 {
                 //            print(" p = \(i)")
-                Tr.set(object: "213", forKey: "\(i)")
+                Tr!.set(object: "213", forKey: "\(i)")
             }
         }
         
