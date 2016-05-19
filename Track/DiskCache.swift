@@ -26,14 +26,16 @@ public typealias DiskCacheAsyncCompletion = (cache: DiskCache?, key: String?, ob
 
 public class DiskCache {
     
-    public var name: String
+    public let name: String
     
-    public var cacheURL: NSURL
+    public let cacheURL: NSURL
     
     private let queue: dispatch_queue_t = dispatch_queue_create(TrackCachePrefix + (String(DiskCache)), DISPATCH_QUEUE_CONCURRENT)
     
     private let semaphoreLock: dispatch_semaphore_t = dispatch_semaphore_create(1)
     
+    //  MARK: 
+    //  MARK: Public
     public static let shareInstance = DiskCache(name: TrackCacheDefauleName)
     
     public init(name: String!, path: String) {
@@ -42,7 +44,7 @@ public class DiskCache {
         
         lock()
         dispatch_async(queue) {
-            self.createCacheDir()
+            self._createCacheDir()
             self.unlock()
         }
     }
@@ -51,7 +53,7 @@ public class DiskCache {
         self.init(name: name, path: NSSearchPathForDirectoriesInDomains(.CachesDirectory, .UserDomainMask, true)[0])
     }
     
-    //  Async
+    //  MARK: Async
     public func set(object object: NSCoding, forKey key: String, completion: DiskCacheAsyncCompletion?) {
         dispatch_async(queue) { [weak self] in
             guard let strongSelf = self else { completion?(cache: nil, key: key, object: object); return }
@@ -84,16 +86,16 @@ public class DiskCache {
         }
     }
     
-    //  Sync
+    //  MARK: Sync
     public func set(object object: NSCoding, forKey key: String) {
-        let fileURL = generateFileURL(key, path: cacheURL)
+        let fileURL = _generateFileURL(key, path: cacheURL)
         threadSafe { 
             let _ = NSKeyedArchiver.archiveRootObject(object, toFile: fileURL.absoluteString)
         }
     }
     
     public func object(forKey key: String) -> AnyObject? {
-        let fileURL = generateFileURL(key, path: cacheURL)
+        let fileURL = _generateFileURL(key, path: cacheURL)
         var object: AnyObject? = nil
         threadSafe {
             if NSFileManager.defaultManager().fileExistsAtPath(fileURL.absoluteString) {
@@ -104,7 +106,7 @@ public class DiskCache {
     }
     
     public func removeObject(forKey key: String) {
-        let fileURL = generateFileURL(key, path: cacheURL)
+        let fileURL = _generateFileURL(key, path: cacheURL)
         threadSafe { 
             if NSFileManager.defaultManager().fileExistsAtPath(fileURL.absoluteString) {
                 do {
@@ -124,7 +126,9 @@ public class DiskCache {
         }
     }
     
-    private func createCacheDir() -> Bool {
+    //  MARK:
+    //  MARK: Private
+    private func _createCacheDir() -> Bool {
         if NSFileManager.defaultManager().fileExistsAtPath(cacheURL.absoluteString) {
             return false
         }
@@ -136,11 +140,12 @@ public class DiskCache {
         return true
     }
     
-    private func generateFileURL(key: String, path: NSURL) -> NSURL {
+    private func _generateFileURL(key: String, path: NSURL) -> NSURL {
         return path.URLByAppendingPathComponent(key)
     }
 }
 
+//  MARK: ThreadSafeProtocol
 extension DiskCache: ThreadSafeProtocol {
     func lock() {
         dispatch_semaphore_wait(semaphoreLock, DISPATCH_TIME_FOREVER)

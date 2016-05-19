@@ -27,19 +27,21 @@ public typealias MemoryCacheAsyncCompletion = (cache: MemoryCache?, key: String?
 
 public class MemoryCache {
     
-    private var cache: NSMutableDictionary = NSMutableDictionary()
+    private let cache: NSMutableDictionary = NSMutableDictionary()
     
     private let queue: dispatch_queue_t = dispatch_queue_create(TrackCachePrefix + String(MemoryCache), DISPATCH_QUEUE_CONCURRENT)
     
     private let semaphoreLock: dispatch_semaphore_t = dispatch_semaphore_create(1)
     
+    //  MARK: 
+    //  MARK: Public
     public static let shareInstance = MemoryCache()
     
     init () {
         
     }
     
-    //  Async
+    //  MARK: Async
     public func set(object object: AnyObject!, forKey key: String!, completion: MemoryCacheAsyncCompletion?) {
         dispatch_async(queue) { [weak self] in
             guard let strongSelf = self else { completion?(cache: nil, key: key, object: object); return }
@@ -72,7 +74,7 @@ public class MemoryCache {
         }
     }
     
-    //  Sync
+    //  MARK: Sync
     public func set(object object: AnyObject, forKey key: String) {
         threadSafe {
             self.cache[key] = object
@@ -100,6 +102,7 @@ public class MemoryCache {
     }
 }
 
+//  MARK: ThreadSafeProtocol
 extension MemoryCache: ThreadSafeProtocol {
     func lock() {
         dispatch_semaphore_wait(semaphoreLock, DISPATCH_TIME_FOREVER)
