@@ -3,25 +3,34 @@
 
   },
   "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
-    "44B36422A7A7C3AD3DE414BC27AA89E3C0009BBA" : 0
+    "44B36422A7A7C3AD3DE414BC27AA89E3C0009BBA+++FE349AC" : 0,
+    "44B36422A7A7C3AD3DE414BC27AA89E3C0009BBA+++873D270" : 0,
+    "44B36422A7A7C3AD3DE414BC27AA89E3C0009BBA+++D46231C" : 0
   },
   "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "F92D1B96-3B0B-4D89-B6DE-57ACBE74881D",
   "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
-    "44B36422A7A7C3AD3DE414BC27AA89E3C0009BBA" : "TMCache\/"
+    "44B36422A7A7C3AD3DE414BC27AA89E3C0009BBA+++FE349AC" : "PINCache\/",
+    "44B36422A7A7C3AD3DE414BC27AA89E3C0009BBA+++873D270" : "TMCache\/",
+    "44B36422A7A7C3AD3DE414BC27AA89E3C0009BBA+++D46231C" : "TMCache\/"
   },
   "DVTSourceControlWorkspaceBlueprintNameKey" : "Demo",
   "DVTSourceControlWorkspaceBlueprintVersion" : 204,
   "DVTSourceControlWorkspaceBlueprintRelativePathToProjectKey" : "Demo\/Demo.xcodeproj",
   "DVTSourceControlWorkspaceBlueprintRemoteRepositoriesKey" : [
     {
-      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/pinterest\/PINCache.git",
-      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
-      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "44B36422A7A7C3AD3DE414BC27AA89E3C0009BBA"
-    },
-    {
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/tumblr\/TMCache.git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
-      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "44B36422A7A7C3AD3DE414BC27AA89E3C0009BBA"
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "44B36422A7A7C3AD3DE414BC27AA89E3C0009BBA+++873D270"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/pinterest\/PINCache.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "44B36422A7A7C3AD3DE414BC27AA89E3C0009BBA+++D46231C"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/pinterest\/PINCache.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "44B36422A7A7C3AD3DE414BC27AA89E3C0009BBA+++FE349AC"
     }
   ]
 }

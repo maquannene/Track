@@ -17,9 +17,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
         
         let printTime: (() -> Void) -> Void = {
-            let startTime: NSDate = NSDate()
+            let startTime: CFTimeInterval = CACurrentMediaTime()
             $0()
-            print(startTime.timeIntervalSinceNow)
+            let endTime: CFTimeInterval = CACurrentMediaTime()
+            print((endTime - startTime) * 1000)
         }
         
 //        var dd = [String : AnyObject]()
@@ -48,30 +49,30 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 //            }
 //        }
         
-//        //  TM
-//        let t = TMDiskCache.sharedCache()
-//
-//        printTime {
-//            for i in 0 ... 2000 {
-//                //            print(" i = \(i)")
-//                t.setObject("sfdsf", forKey: "\(i)")
-//            }
-//        }
-//        
-//        //  PIN
-//        let p = PINDiskCache.sharedCache()
-//        
-//        printTime {
-//            for i in 0 ... 2000 {
-//                //            print(" p = \(i)")
-//                p.setObject("213", forKey: "\(i)")
-//            }
-//        }
+        //  TM
+        let t = TMDiskCache.sharedCache()
+
+        printTime {
+            for i in 0 ... 2000 {
+                //            print(" i = \(i)")
+                t.setObject("sfdsf", forKey: "\(i)")
+            }
+        }
         
-        //  Track
+        //  PIN
+        let p = PINDiskCache.sharedCache()
+        
+        printTime {
+            for i in 0 ... 2000 {
+                //            print(" p = \(i)")
+                p.setObject("213", forKey: "\(i)")
+            }
+        }
+        
+//          Track
         let Tr = Cache.shareInstance
         printTime {
-            for i in 0 ... 5 {
+            for i in 0 ... 2000 {
                 //            print(" p = \(i)")
                 Tr.set(object: "213", forKey: "\(i)")
             }
