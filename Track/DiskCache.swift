@@ -34,9 +34,9 @@ public class DiskCache {
     
     public let cacheURL: NSURL
     
-    private let queue: dispatch_queue_t = dispatch_queue_create(TrackCachePrefix + (String(DiskCache)), DISPATCH_QUEUE_CONCURRENT)
+    private let _queue: dispatch_queue_t = dispatch_queue_create(TrackCachePrefix + (String(DiskCache)), DISPATCH_QUEUE_CONCURRENT)
     
-    private let semaphoreLock: dispatch_semaphore_t = dispatch_semaphore_create(1)
+    private let _semaphoreLock: dispatch_semaphore_t = dispatch_semaphore_create(1)
     
     //  MARK: 
     //  MARK: Public
@@ -50,7 +50,7 @@ public class DiskCache {
         self.cacheURL = NSURL(string: path)!.URLByAppendingPathComponent(TrackCachePrefix + name, isDirectory: false)
         
         lock()
-        dispatch_async(queue) {
+        dispatch_async(_queue) {
             self._createCacheDir()
             self.unlock()
         }
@@ -62,7 +62,7 @@ public class DiskCache {
     
     //  MARK: Async
     public func set(object object: NSCoding, forKey key: String, completion: DiskCacheAsyncCompletion?) {
-        dispatch_async(queue) { [weak self] in
+        dispatch_async(_queue) { [weak self] in
             guard let strongSelf = self else { completion?(cache: nil, key: key, object: object); return }
             strongSelf.set(object: object, forKey: key)
             completion?(cache: strongSelf, key: key, object: object)
@@ -70,7 +70,7 @@ public class DiskCache {
     }
     
     public func object(forKey key: String, completion: DiskCacheAsyncCompletion?) {
-        dispatch_async(queue) { [weak self] in
+        dispatch_async(_queue) { [weak self] in
             guard let strongSelf = self else { completion?(cache: nil, key: key, object: nil); return }
             let object = strongSelf.object(forKey: key)
             completion?(cache: strongSelf, key: key, object: object)
@@ -78,7 +78,7 @@ public class DiskCache {
     }
     
     public func removeObject(forKey key: String, completion: DiskCacheAsyncCompletion?) {
-        dispatch_async(queue) { [weak self] in
+        dispatch_async(_queue) { [weak self] in
             guard let strongSelf = self else { completion?(cache: nil, key: key, object: nil); return }
             strongSelf.removeObject(forKey: key)
             completion?(cache: strongSelf, key: key, object: nil)
@@ -86,7 +86,7 @@ public class DiskCache {
     }
     
     public func removeAllObject(completion: DiskCacheAsyncCompletion?) {
-        dispatch_async(queue) { [weak self] in
+        dispatch_async(_queue) { [weak self] in
             guard let strongSelf = self else { completion?(cache: nil, key: nil, object: nil); return }
             strongSelf.removeAllObject()
             completion?(cache: strongSelf, key: nil, object: nil)
@@ -168,10 +168,10 @@ public class DiskCache {
 //  MARK: ThreadSafeProtocol
 extension DiskCache: ThreadSafeProtocol {
     func lock() {
-        dispatch_semaphore_wait(semaphoreLock, DISPATCH_TIME_FOREVER)
+        dispatch_semaphore_wait(_semaphoreLock, DISPATCH_TIME_FOREVER)
     }
     
     func unlock() {
-        dispatch_semaphore_signal(semaphoreLock)
+        dispatch_semaphore_signal(_semaphoreLock)
     }
 }

@@ -22,7 +22,7 @@ public class Cache {
     
     public let diskCache: DiskCache
     
-    private let queue: dispatch_queue_t = dispatch_queue_create(TrackCachePrefix + (String(Cache)), DISPATCH_QUEUE_CONCURRENT)
+    private let _queue: dispatch_queue_t = dispatch_queue_create(TrackCachePrefix + (String(Cache)), DISPATCH_QUEUE_CONCURRENT)
     
     //  MARK:
     //  MARK: Public
@@ -46,19 +46,19 @@ public class Cache {
         asyncGroup(2, operation: { completion in
             self.memoryCache.set(object: object, forKey: key) { _, _, _ in completion?() }
             self.diskCache.set(object: object, forKey: key) { _, _, _ in completion?() }
-        }, notifyQueue: queue) { [weak self] in
+        }, notifyQueue: _queue) { [weak self] in
             guard let strongSelf = self else { completion?(cache: nil, key: nil, object: nil); return }
             completion?(cache: strongSelf, key: nil, object: nil)
         }
     }
     
     public func object(forKey key: String, completion: CacheAsyncCompletion?) {
-        dispatch_async(queue) { [weak self] in
+        dispatch_async(_queue) { [weak self] in
             guard let strongSelf = self else { return }
             strongSelf.memoryCache.object(forKey: key) { [weak self] (memCache, memKey, memObject) in
                 guard let strongSelf = self else { return }
                 if memObject != nil {
-                    dispatch_async(strongSelf.queue, {
+                    dispatch_async(strongSelf._queue, {
                         completion?(cache: strongSelf, key: memKey, object: memObject)
                     })
                 }
@@ -66,7 +66,7 @@ public class Cache {
                     strongSelf.diskCache.object(forKey: key) { [weak self] (diskCache, diskKey, diskObject) in
                         guard let strongSelf = self else { return }
                         strongSelf.memoryCache.set(object: diskCache, forKey: diskKey, completion: nil)
-                        dispatch_async(strongSelf.queue, {
+                        dispatch_async(strongSelf._queue, {
                             completion?(cache: strongSelf, key: diskKey, object: diskObject)
                         })
                     }
@@ -79,7 +79,7 @@ public class Cache {
         asyncGroup(2, operation: { completion in
             self.memoryCache.removeObject(forKey: key) { _, _, _ in completion?() }
             self.diskCache.removeObject(forKey: key) { _, _, _ in completion?() }
-        }, notifyQueue: queue) { [weak self] in
+        }, notifyQueue: _queue) { [weak self] in
             guard let strongSelf = self else { completion?(cache: nil, key: nil, object: nil); return }
             completion?(cache: strongSelf, key: nil, object: nil)
         }
@@ -89,7 +89,7 @@ public class Cache {
         asyncGroup(2, operation: { completion in
             self.memoryCache.removeAllObject { _, _, _ in completion?() }
             self.diskCache.removeAllObject { _, _, _ in completion?() }
-        }, notifyQueue: queue) { [weak self] in
+        }, notifyQueue: _queue) { [weak self] in
             guard let strongSelf = self else { completion?(cache: nil, key: nil, object: nil); return }
             completion?(cache: strongSelf, key: nil, object: nil)
         }
@@ -162,7 +162,7 @@ public class Cache {
         operation(operationCompletion)
         
         if group != nil {
-            dispatch_group_notify(group!, queue) {
+            dispatch_group_notify(group!, _queue) {
                 completion?()
             }
         }

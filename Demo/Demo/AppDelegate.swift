@@ -16,6 +16,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
         
+//        let list = LinkedList<String>()
+//        let node0 = Node(key: "0", value: "0")
+//        list.addNodeAtHead(node0)
+//        let node2 = Node(key: "2", value: "2")
+//        list.addNodeAtHead(node2)
+//        list.moveNodeToHead(node0)
+//        let node1 = Node(key: "1", value: "1")
+//        list.deleteTailNode()
+//        list.addNodeAtHead(node1)
+//        list.addNodeAtHead(node2)
+//        print(list)
+        
         let printTime: (() -> Void) -> Void = {
             let startTime: CFTimeInterval = CACurrentMediaTime()
             $0()
@@ -50,7 +62,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 //        }
         
         //  TM
-        let t = TMDiskCache.sharedCache()
+        let t = TMMemoryCache.sharedCache()
 
         printTime {
             for i in 0 ... 2000 {
@@ -59,8 +71,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             }
         }
         
+        printTime {
+            for i in 0 ... 2000 {
+                t.objectForKey("\(i)")
+            }
+        }
+        
         //  PIN
-        let p = PINDiskCache.sharedCache()
+        let p = PINMemoryCache.sharedCache()
         
         printTime {
             for i in 0 ... 2000 {
@@ -69,15 +87,42 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             }
         }
         
-//          Track
-        let Tr = Cache.shareInstance
         printTime {
             for i in 0 ... 2000 {
-                //            print(" p = \(i)")
-                Tr!.set(object: "213", forKey: "\(i)")
+                p.objectForKey("\(i)")
             }
         }
         
+        //  YY
+        let yy = YYMemoryCache()
+        
+        printTime {
+            for i in 0 ... 2000 {
+                yy.setObject("213", forKey: "\(i)")
+            }
+        }
+        
+        printTime {
+            for i in 0 ... 2000 {
+                yy.objectForKey("\(i)")
+            }
+        }
+        
+//          Track
+        let Tr = MemoryCache.shareInstance
+        printTime {
+            for i in 0 ... 2000 {
+                //            print(" p = \(i)")
+                Tr["\(i)"] = "\(i * 2)"
+            }
+        }
+        
+        
+        printTime {
+            for i in 0 ... 2000 {
+                Tr.object(forKey: "\(i)")
+            }
+        }
         return true
     }
 

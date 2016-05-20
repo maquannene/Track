@@ -11,5 +11,6 @@
 
 #import "PINCache.h"
 #import "TMCache.h"
+#import "YYCache.h"
 
 #endif /* Demo_Bridging_Header_h */
