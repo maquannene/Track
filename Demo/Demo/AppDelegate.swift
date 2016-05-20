@@ -35,83 +35,92 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             print((endTime - startTime) * 1000)
         }
         
-//        var dd = [String : AnyObject]()
+        let time = 20000
+        
+        let dd = NSMutableDictionary()
+        printTime {
+            for i in 0 ... time {
+                dd["\(i)"] = "\(i)"
+            }
+        }
+        
+        printTime {
+            for i in 0 ... time {
+                if i % 2 == 0 {
+                    dd["\(i)"] = "\(i)"
+                }
+            }
+        }
+//
 //        printTime {
-//            for i in 0 ... 200000 {
-//                dd["\(i)"] = "\(i)"
-//            }
-//        }
-//        
-//        let dic = NSMutableDictionary()
-//        printTime {
-//            for i in 0 ... 200000 {
-//                dic["\(i)"] = "\(i)"
-//            }
-//        }
-//        
-//        printTime {
-//            for i in 0 ... 200000 {
+//            for i in 0 ... time0 {
 //                let x = dd["\(i)"]
 //            }
 //        }
 //        
 //        printTime {
-//            for i in 0 ... 200000 {
+//            for i in 0 ... time0 {
 //                let x = dic["\(i)"]
 //            }
 //        }
         
         //  TM
-        let t = TMMemoryCache.sharedCache()
+//        let t = TMMemoryCache.sharedCache()
+//
+//        printTime {
+//            for i in 0 ... time {
+//                //            print(" i = \(i)")
+//                t.setObject("sfdsf", forKey: "\(i)")
+//            }
+//        }
+//        
+//        printTime {
+//            for i in 0 ... time {
+//                if i % 2 == 0 {
+//                    t.objectForKey("\(i)")
+//                }
+//            }
+//        }
 
-        printTime {
-            for i in 0 ... 2000 {
-                //            print(" i = \(i)")
-                t.setObject("sfdsf", forKey: "\(i)")
-            }
-        }
-        
-        printTime {
-            for i in 0 ... 2000 {
-                t.objectForKey("\(i)")
-            }
-        }
-        
         //  PIN
         let p = PINMemoryCache.sharedCache()
         
         printTime {
-            for i in 0 ... 2000 {
+            for i in 0 ... time {
                 //            print(" p = \(i)")
                 p.setObject("213", forKey: "\(i)")
             }
         }
         
         printTime {
-            for i in 0 ... 2000 {
-                p.objectForKey("\(i)")
+            for i in 0 ... time {
+                if i % 2 == 0 {
+                    p.objectForKey("\(i)")
+                }
             }
         }
-        
-        //  YY
+
+//        //  YY
         let yy = YYMemoryCache()
         
         printTime {
-            for i in 0 ... 2000 {
+            for i in 0 ... time {
                 yy.setObject("213", forKey: "\(i)")
             }
         }
         
         printTime {
-            for i in 0 ... 2000 {
-                yy.objectForKey("\(i)")
+            for i in 0 ... time {
+                if i % 2 == 0 {
+                    yy.objectForKey("\(i)")
+                }
             }
         }
-        
+//
 //          Track
         let Tr = MemoryCache.shareInstance
         printTime {
-            for i in 0 ... 2000 {
+            for i in 0 ... time {
                 //            print(" p = \(i)")
                 Tr["\(i)"] = "\(i * 2)"
             }
@@ -119,8 +128,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
         
         printTime {
-            for i in 0 ... 2000 {
-                Tr.object(forKey: "\(i)")
+            for i in 0 ... time {
+                if i % 2 == 0 {
+                    Tr.object(forKey: "\(i)")
+                }
             }
         }
         return true

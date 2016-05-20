@@ -141,13 +141,13 @@ class LRU<T> {
     
     private typealias NodeType = Node<T>
     
-    private let dic: NSMutableDictionary = NSMutableDictionary()
+    private var _dic: NSMutableDictionary = NSMutableDictionary()
     
-    private let linkedList: LinkedList = LinkedList<T>()
+    private let _linkedList: LinkedList = LinkedList<T>()
     
     var count: Int {
         get {
-            return linkedList.count
+            return _linkedList.count
         }
     }
     
@@ -159,8 +159,8 @@ class LRU<T> {
      */
     func set(object object: T, forKey key: String) {
         let node = NodeType(key: key, value: object)
-        dic.setObject(node, forKey: node.key)
-        addNodeAtHead(node)
+        _dic.setObject(node, forKey: node.key)
+        _linkedList.insertNode(node, atIndex: 0)
     }
     
     /**
@@ -171,8 +171,9 @@ class LRU<T> {
      - returns: optional object
      */
     func object(forKey key: String) -> T? {
-        if let node = dic.objectForKey(key) as? NodeType {
-            moveNodeToHead(node)
+        if let node = _dic.objectForKey(key) as? NodeType {
+            _linkedList.removeNode(node)
+            _linkedList.insertNode(node, atIndex: 0)
             return node.value
         }
         return nil
@@ -184,8 +185,9 @@ class LRU<T> {
      - parameter key:
      */
     func removeObject(forKey key: String) {
-        if let node = dic.objectForKey(key) as? NodeType {
-            deleteNode(node)
+        if let node = _dic.objectForKey(key) as? NodeType {
+            _dic.removeObjectForKey(node.key)
+            _linkedList.removeNode(node)
         }
     }
     
@@ -193,7 +195,8 @@ class LRU<T> {
      remove all objects
      */
     func removeAllObjects() {
-        deleteAllNodes()
+        _dic = NSMutableDictionary()
+        _linkedList.removeAllNodes()
     }
     
     subscript(key: String) -> T? {
@@ -210,47 +213,13 @@ class LRU<T> {
     }
     
     /**
-     add node to link and list at head
-     
-     - parameter node: added node
-     */
-    private func addNodeAtHead(node: NodeType) {
-        dic.setObject(node, forKey: node.key)
-        linkedList.insertNode(node, atIndex: 0)
-    }
-    /**
-     delete node from link and list
-     
-     - parameter node: deleted node
-     */
-    private func deleteNode(node: NodeType) {
-        dic.removeObjectForKey(node.key)
-        linkedList.removeNode(node)
-    }
-    /**
-     move node to head at link
-     
-     - parameter node: node
-     */
-    private func moveNodeToHead(node: NodeType) {
-        linkedList.removeNode(node)
-        linkedList.insertNode(node, atIndex: 0)
-    }
-    /**
      delete tail node from link and list
      */
     private func deleteTailNode() {
-        if let tailNode = linkedList.tailNode {
-            dic.removeObjectForKey(tailNode.key)
-            linkedList.removeNode(tailNode)
+        if let tailNode = _linkedList.tailNode {
+            _dic.removeObjectForKey(tailNode.key)
+            _linkedList.removeNode(tailNode)
         }
-    }
-    /**
-     delete all node from link and list
-     */
-    private func deleteAllNodes() {
-        dic.removeAllObjects()
-        linkedList.removeAllNodes()
     }
     
 }

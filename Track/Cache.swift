@@ -28,7 +28,7 @@ public class Cache {
     //  MARK: Public
     public static let shareInstance = Cache(name: TrackCacheDefauleName)
     
-    public init?(name: String!, path: String) {
+    public init?(name: String, path: String) {
         if name.characters.count == 0 || path.characters.count == 0 {
             return nil
         }
@@ -65,7 +65,9 @@ public class Cache {
                 else {
                     strongSelf.diskCache.object(forKey: key) { [weak self] (diskCache, diskKey, diskObject) in
                         guard let strongSelf = self else { return }
-                        strongSelf.memoryCache.set(object: diskCache, forKey: diskKey, completion: nil)
+                        if let diskKey = diskKey, diskCache = diskCache {
+                            strongSelf.memoryCache.set(object: diskCache, forKey: diskKey, completion: nil)
+                        }
                         dispatch_async(strongSelf._queue, {
                             completion?(cache: strongSelf, key: diskKey, object: diskObject)
                         })
@@ -151,6 +153,7 @@ public class Cache {
         var group: dispatch_group_t? = nil
         var operationCompletion: OperationCompeltion?
         if (completion != nil) {
+            group = dispatch_group_create()
             for _ in 0 ..< asyncNumber {
                 group = dispatch_group_create()
             }
@@ -161,8 +164,8 @@ public class Cache {
         
         operation(operationCompletion)
         
-        if group != nil {
-            dispatch_group_notify(group!, _queue) {
+        if let group = group {
+            dispatch_group_notify(group, _queue) {
                 completion?()
             }
         }

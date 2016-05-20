@@ -46,7 +46,7 @@ public class MemoryCache {
     }
     
     //  MARK: Async
-    public func set(object object: AnyObject!, forKey key: String!, completion: MemoryCacheAsyncCompletion?) {
+    public func set(object object: AnyObject, forKey key: String, completion: MemoryCacheAsyncCompletion?) {
         dispatch_async(_queue) { [weak self] in
             guard let strongSelf = self else { completion?(cache: nil, key: key, object: object); return }
             strongSelf.set(object: object, forKey: key)
@@ -80,29 +80,29 @@ public class MemoryCache {
     
     //  MARK: Sync
     public func set(object object: AnyObject, forKey key: String) {
-        threadSafe {
-            self._cache[key] = object
-        }
+        lock()
+        self._cache[key] = object
+        unlock()
     }
     
     public func object(forKey key: String) -> AnyObject? {
         var object: AnyObject? = nil
-        threadSafe {
-            object = self._cache[key]
-        }
+        lock()
+        object = self._cache[key]
+        unlock()
         return object
     }
     
     public func removeObject(forKey key: String) {
-        threadSafe { 
-            self._cache.removeObject(forKey:key)
-        }
+        lock()
+        self._cache.removeObject(forKey:key)
+        unlock()
     }
     
     public func removeAllObject() {
-        threadSafe {
-            self._cache.removeAllObjects()
-        }
+        lock()
+        self._cache.removeAllObjects()
+        unlock()
     }
     
     public subscript(key: String) -> AnyObject? {
@@ -120,13 +120,13 @@ public class MemoryCache {
     
     @objc func _didReceiveMemoryWarningNotification() {
         if _shouldRemoveAllObjectWhenMemoryWarning {
-            removeAllObject()
+            removeAllObject(nil)
         }
     }
 }
 
 //  MARK: ThreadSafeProtocol
-extension MemoryCache: ThreadSafeProtocol {
+private extension MemoryCache {
     func lock() {
         dispatch_semaphore_wait(_semaphoreLock, DISPATCH_TIME_FOREVER)
     }

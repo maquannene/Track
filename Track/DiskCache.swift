@@ -42,7 +42,7 @@ public class DiskCache {
     //  MARK: Public
     public static let shareInstance = DiskCache(name: TrackCacheDefauleName)
     
-    public init?(name: String!, path: String) {
+    public init?(name: String, path: String) {
         if name.characters.count == 0 || path.characters.count == 0 {
             return nil
         }
@@ -96,41 +96,41 @@ public class DiskCache {
     //  MARK: Sync
     public func set(object object: NSCoding, forKey key: String) {
         let fileURL = _generateFileURL(key, path: cacheURL)
-        threadSafe { 
-            let _ = NSKeyedArchiver.archiveRootObject(object, toFile: fileURL.absoluteString)
-        }
+        lock()
+        let _ = NSKeyedArchiver.archiveRootObject(object, toFile: fileURL.absoluteString)
+        unlock()
     }
     
     public func object(forKey key: String) -> AnyObject? {
         let fileURL = _generateFileURL(key, path: cacheURL)
         var object: AnyObject? = nil
-        threadSafe {
-            if NSFileManager.defaultManager().fileExistsAtPath(fileURL.absoluteString) {
-                object = NSKeyedUnarchiver.unarchiveObjectWithFile(fileURL.absoluteString)
-            }
+        lock()
+        if NSFileManager.defaultManager().fileExistsAtPath(fileURL.absoluteString) {
+            object = NSKeyedUnarchiver.unarchiveObjectWithFile(fileURL.absoluteString)
         }
+        unlock()
         return object
     }
     
     public func removeObject(forKey key: String) {
         let fileURL = _generateFileURL(key, path: cacheURL)
-        threadSafe { 
-            if NSFileManager.defaultManager().fileExistsAtPath(fileURL.absoluteString) {
-                do {
-                    try NSFileManager.defaultManager().removeItemAtPath(fileURL.absoluteString)
-                } catch {}
-            }
+        lock()
+        if NSFileManager.defaultManager().fileExistsAtPath(fileURL.absoluteString) {
+            do {
+                try NSFileManager.defaultManager().removeItemAtPath(fileURL.absoluteString)
+            } catch {}
         }
+        unlock()
     }
     
     public func removeAllObject() {
-        threadSafe { 
-            if NSFileManager.defaultManager().fileExistsAtPath(self.cacheURL.absoluteString) {
-                do {
-                    try NSFileManager.defaultManager().removeItemAtPath(self.cacheURL.absoluteString)
-                } catch {}
-            }
+        lock()
+        if NSFileManager.defaultManager().fileExistsAtPath(self.cacheURL.absoluteString) {
+            do {
+                try NSFileManager.defaultManager().removeItemAtPath(self.cacheURL.absoluteString)
+            } catch {}
         }
+        unlock()
     }
     
     public subscript(key: String) -> NSCoding? {
@@ -166,7 +166,7 @@ public class DiskCache {
 }
 
 //  MARK: ThreadSafeProtocol
-extension DiskCache: ThreadSafeProtocol {
+private extension DiskCache {
     func lock() {
         dispatch_semaphore_wait(_semaphoreLock, DISPATCH_TIME_FOREVER)
     }
