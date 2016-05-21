@@ -142,10 +142,11 @@ public class Cache {
         }
     }
     
-    private typealias OperationCompeltion = () -> Void
-    
     //  MARK:
     //  MARK: Pirvate
+    
+    private typealias OperationCompeltion = () -> Void
+    
     private func asyncGroup(asyncNumber: Int,
                             operation: OperationCompeltion? -> Void,
                             notifyQueue: dispatch_queue_t,

@@ -24,11 +24,49 @@
 import Foundation
 import UIKit
 
+class MemoryObject: LRUObjectBase {
+    var key: String = ""
+    var value: AnyObject
+    var cost: UInt = 0
+    init(key: String, value: AnyObject, cost: UInt = 0) {
+        self.key = key
+        self.value = value
+        self.cost = cost
+    }
+}
+
+func == (lhs: MemoryObject, rhs: MemoryObject) -> Bool {
+    return lhs.key == rhs.key
+}
+
 public typealias MemoryCacheAsyncCompletion = (cache: MemoryCache?, key: String?, object: AnyObject?) -> Void
 
 public class MemoryCache {
     
-    private let _cache: LRU = LRU<AnyObject>()
+    public var totalCount: UInt {
+        get {
+            lock()
+            let count = _cache.count
+            unlock()
+            return count
+        }
+    }
+    
+    public var countLimit: UInt {
+        set {
+            lock()
+            _cache.countLimit = newValue
+            unlock()
+        }
+        get {
+            lock()
+            let count = _cache.countLimit
+            unlock()
+            return count
+        }
+    }
+    
+    private let _cache: LRU = LRU<MemoryObject>()
     
     private let _queue: dispatch_queue_t = dispatch_queue_create(TrackCachePrefix + String(MemoryCache), DISPATCH_QUEUE_CONCURRENT)
     
@@ -44,7 +82,7 @@ public class MemoryCache {
         _shouldRemoveAllObjectWhenMemoryWarning = true
         NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(MemoryCache._didReceiveMemoryWarningNotification), name: UIApplicationDidReceiveMemoryWarningNotification, object: nil)
     }
-    
+
     //  MARK: Async
     public func set(object object: AnyObject, forKey key: String, completion: MemoryCacheAsyncCompletion?) {
         dispatch_async(_queue) { [weak self] in
@@ -78,30 +116,44 @@ public class MemoryCache {
         }
     }
     
+    public func trimToCount(count: UInt, completion: MemoryCacheAsyncCompletion?) {
+        dispatch_async(_queue) { [weak self] in
+            guard let strongSelf = self else { completion?(cache: nil, key: nil, object: nil); return }
+            strongSelf.trimToCount(count)
+            completion?(cache: strongSelf, key: nil, object: nil)
+        }
+    }
+    
     //  MARK: Sync
     public func set(object object: AnyObject, forKey key: String) {
         lock()
-        self._cache[key] = object
+        _cache.set(object: MemoryObject(key: key, value: object), forKey: key)
         unlock()
     }
     
     public func object(forKey key: String) -> AnyObject? {
-        var object: AnyObject? = nil
+        var object: MemoryObject? = nil
         lock()
-        object = self._cache[key]
+        object = _cache.object(forKey: key)
         unlock()
-        return object
+        return object?.value
     }
     
     public func removeObject(forKey key: String) {
         lock()
-        self._cache.removeObject(forKey:key)
+        _cache.removeObject(forKey:key)
         unlock()
     }
     
     public func removeAllObject() {
         lock()
-        self._cache.removeAllObjects()
+        _cache.removeAllObjects()
+        unlock()
+    }
+    
+    public func trimToCount(count: UInt) {
+        lock()
+        _cache.trimToCount(count)
         unlock()
     }
     
@@ -117,8 +169,10 @@ public class MemoryCache {
             }
         }
     }
-    
-    @objc func _didReceiveMemoryWarningNotification() {
+
+    //  MARK:
+    //  MARK: Private
+    @objc private func _didReceiveMemoryWarningNotification() {
         if _shouldRemoveAllObjectWhenMemoryWarning {
             removeAllObject(nil)
         }
