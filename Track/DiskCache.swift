@@ -61,6 +61,9 @@ public class DiskCache {
     }
     
     //  MARK: Async
+    /**
+     ASync method to operate cache
+     */
     public func set(object object: NSCoding, forKey key: String, completion: DiskCacheAsyncCompletion?) {
         dispatch_async(_queue) { [weak self] in
             guard let strongSelf = self else { completion?(cache: nil, key: key, object: object); return }
@@ -94,6 +97,9 @@ public class DiskCache {
     }
     
     //  MARK: Sync
+    /**
+     Sync method to operate cache
+     */
     public func set(object object: NSCoding, forKey key: String) {
         let fileURL = _generateFileURL(key, path: cacheURL)
         lock()

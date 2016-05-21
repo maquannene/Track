@@ -9,7 +9,6 @@
 import Foundation
 
 class Node<T: Equatable> {
-    
     weak var preNode: Node?
     weak var nextNode: Node?
     let data: T
@@ -146,14 +145,22 @@ class LRU<T: LRUObjectBase> {
     private var _dic: NSMutableDictionary = NSMutableDictionary()
     
     private let _linkedList: LinkedList = LinkedList<T>()
-
+    
     var count: UInt {
         return _linkedList.count
     }
     
+    private(set) var cost: UInt = 0
+    
     var countLimit: UInt = UInt.max {
         didSet {
             trimToCount(countLimit)
+        }
+    }
+    
+    var costLimit: UInt = UInt.max {
+        didSet {
+            trimToCost(costLimit)
         }
     }
     
@@ -167,8 +174,15 @@ class LRU<T: LRUObjectBase> {
         let node = Node(data: object)
         _dic.setObject(node, forKey: node.data.key)
         _linkedList.insertNode(node, atIndex: 0)
+        
+        cost += object.cost
+        
+        if cost > costLimit {
+            trimToCost(costLimit)
+        }
+        
         if _linkedList.count > countLimit {
-            deleteTailNode()
+            trimToCount(countLimit)
         }
     }
     
@@ -197,6 +211,7 @@ class LRU<T: LRUObjectBase> {
         if let node = _dic.objectForKey(key) as? NodeType {
             _dic.removeObjectForKey(node.data.key)
             _linkedList.removeNode(node)
+            cost -= node.data.cost
         }
     }
     
@@ -206,6 +221,7 @@ class LRU<T: LRUObjectBase> {
     func removeAllObjects() {
         _dic = NSMutableDictionary()
         _linkedList.removeAllNodes()
+        cost = 0
     }
     
     /**
@@ -214,15 +230,31 @@ class LRU<T: LRUObjectBase> {
      - parameter count: number of the value
      */
     func trimToCount(count: UInt) {
-        let currentCount: UInt = _linkedList.count
-        if currentCount < count {
+        if _linkedList.count < count {
+            return
+        }
+        let trimCount: UInt = _linkedList.count - count
+        var newTailNode: NodeType? = _linkedList.tailNode
+        for _ in 0 ..< trimCount {
+            _linkedList.count -= 1
+            cost -= newTailNode!.data.cost
+            _dic.removeObjectForKey(newTailNode!.data.key)
+            newTailNode = newTailNode?.preNode
+        }
+        newTailNode?.nextNode = nil
+        _linkedList.tailNode = newTailNode
+    }
+    
+    func trimToCost(cost: UInt) {
+        if self.cost < cost {
             return
         }
         var newTailNode: NodeType? = _linkedList.tailNode
-        for _ in 0 ..< currentCount - count {
+        while (self.cost > cost) {
+            self.cost -= newTailNode!.data.cost
+            _linkedList.count -= 1
             _dic.removeObjectForKey(newTailNode!.data.key)
             newTailNode = newTailNode?.preNode
-            _linkedList.count -= 1
         }
         newTailNode?.nextNode = nil
         _linkedList.tailNode = newTailNode
@@ -240,15 +272,4 @@ class LRU<T: LRUObjectBase> {
             }
         }
     }
-    
-    /**
-     delete tail node from link and list
-     */
-    private func deleteTailNode() {
-        if let tailNode = _linkedList.tailNode {
-            _dic.removeObjectForKey(tailNode.data.key)
-            _linkedList.removeNode(tailNode)
-        }
-    }
-    
 }

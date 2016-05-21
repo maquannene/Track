@@ -42,6 +42,9 @@ public class Cache {
     }
     
     //  MARK: Async
+    /**
+     ASync method to operate cache
+     */
     public func set(object object: NSCoding, forKey key: String, completion: CacheAsyncCompletion?) {
         asyncGroup(2, operation: { completion in
             self.memoryCache.set(object: object, forKey: key) { _, _, _ in completion?() }
@@ -98,6 +101,9 @@ public class Cache {
     }
     
     //  MARK: Sync
+    /**
+     Sync method to operate cache
+     */
     public func set(object object: NSCoding, forKey key: String) {
         memoryCache.set(object: object, forKey: key)
         diskCache.set(object: object, forKey: key)

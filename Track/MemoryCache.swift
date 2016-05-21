@@ -52,6 +52,15 @@ public class MemoryCache {
         }
     }
     
+    public var totalCost: UInt {
+        get {
+            lock()
+            let cost = _cache.cost
+            unlock()
+            return cost
+        }
+    }
+    
     public var countLimit: UInt {
         set {
             lock()
@@ -60,9 +69,23 @@ public class MemoryCache {
         }
         get {
             lock()
-            let count = _cache.countLimit
+            let countLimit = _cache.countLimit
             unlock()
-            return count
+            return countLimit
+        }
+    }
+    
+    public var costLimit: UInt {
+        set {
+            lock()
+            _cache.costLimit = newValue
+            unlock()
+        }
+        get {
+            lock()
+            let costLimit = _cache.costLimit
+            unlock()
+            return costLimit
         }
     }
     
@@ -84,10 +107,13 @@ public class MemoryCache {
     }
 
     //  MARK: Async
-    public func set(object object: AnyObject, forKey key: String, completion: MemoryCacheAsyncCompletion?) {
+    /**
+     Async method to operate cache
+     */
+    public func set(object object: AnyObject, forKey key: String, cost: UInt = 0, completion: MemoryCacheAsyncCompletion?) {
         dispatch_async(_queue) { [weak self] in
             guard let strongSelf = self else { completion?(cache: nil, key: key, object: object); return }
-            strongSelf.set(object: object, forKey: key)
+            strongSelf.set(object: object, forKey: key, cost: cost)
             completion?(cache: strongSelf, key: key, object: object)
         }
     }
@@ -124,10 +150,21 @@ public class MemoryCache {
         }
     }
     
+    public func trimToCost(cost: UInt, completion: MemoryCacheAsyncCompletion?) {
+        dispatch_async(_queue) { [weak self] in
+            guard let strongSelf = self else { completion?(cache: nil, key: nil, object: nil); return }
+            strongSelf.trimToCost(cost)
+            completion?(cache: strongSelf, key: nil, object: nil)
+        }
+    }
+    
     //  MARK: Sync
-    public func set(object object: AnyObject, forKey key: String) {
+    /**
+     Sync method to operate cache
+     */
+    public func set(object object: AnyObject, forKey key: String, cost: UInt = 0) {
         lock()
-        _cache.set(object: MemoryObject(key: key, value: object), forKey: key)
+        _cache.set(object: MemoryObject(key: key, value: object, cost: cost), forKey: key)
         unlock()
     }
     
@@ -154,6 +191,12 @@ public class MemoryCache {
     public func trimToCount(count: UInt) {
         lock()
         _cache.trimToCount(count)
+        unlock()
+    }
+    
+    public func trimToCost(cost: UInt) {
+        lock()
+        _cache.trimToCost(cost)
         unlock()
     }
     

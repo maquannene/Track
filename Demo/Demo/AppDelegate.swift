@@ -16,18 +16,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
         
-//        let list = LinkedList<String>()
-//        let node0 = Node(key: "0", value: "0")
-//        list.addNodeAtHead(node0)
-//        let node2 = Node(key: "2", value: "2")
-//        list.addNodeAtHead(node2)
-//        list.moveNodeToHead(node0)
-//        let node1 = Node(key: "1", value: "1")
-//        list.deleteTailNode()
-//        list.addNodeAtHead(node1)
-//        list.addNodeAtHead(node2)
-//        print(list)
-        
         let printTime: (() -> Void) -> Void = {
             let startTime: CFTimeInterval = CACurrentMediaTime()
             $0()
@@ -35,7 +23,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             print((endTime - startTime) * 1000)
         }
         
-        let time = 5
+        let time: UInt = 5
         
 //        let dd = NSMutableDictionary()
 //        printTime {
@@ -120,12 +108,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 //          Track
         let Tr = MemoryCache.shareInstance
         
-        Tr.countLimit = 3
+//        Tr.countLimit = 3
+        Tr.costLimit = 7
         
         printTime {
             for i in 0 ... time {
                 //            print(" p = \(i)")
-                Tr["\(i)"] = "\(i)"
+//                Tr["\(i)"] = "\(i)"
+                Tr.set(object: "\(i)", forKey: "\(i)", cost: i)
             }
         }
         
@@ -133,10 +123,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         printTime {
             for i in 0 ... time {
                 if i < 3 {
-                    Tr.object(forKey: "\(i)")
+                    Tr.removeObject(forKey: "\(i)")
                 }
             }
         }
+        
         
         return true
     }

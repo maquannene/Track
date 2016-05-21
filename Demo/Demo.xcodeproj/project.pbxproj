@@ -7,11 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		D411CE191CEDE0D700F396CC /* YYCache.m in Sources */ = {isa = PBXBuildFile; fileRef = D411CE121CEDE0D700F396CC /* YYCache.m */; };
-		D411CE1A1CEDE0D700F396CC /* YYDiskCache.m in Sources */ = {isa = PBXBuildFile; fileRef = D411CE141CEDE0D700F396CC /* YYDiskCache.m */; };
-		D411CE1B1CEDE0D700F396CC /* YYKVStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = D411CE161CEDE0D700F396CC /* YYKVStorage.m */; };
-		D411CE1C1CEDE0D700F396CC /* YYMemoryCache.m in Sources */ = {isa = PBXBuildFile; fileRef = D411CE181CEDE0D700F396CC /* YYMemoryCache.m */; };
-		D411CE1E1CEDE17B00F396CC /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = D411CE1D1CEDE17B00F396CC /* libsqlite3.tbd */; };
 		D4485AAF1CEF050700EC8C21 /* LinkedList.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4485AAE1CEF050700EC8C21 /* LinkedList.swift */; };
 		D481BDC61CEC5ACB0010A367 /* Cache.swift in Sources */ = {isa = PBXBuildFile; fileRef = D481BDC31CEC5ACB0010A367 /* Cache.swift */; };
 		D481BDC71CEC5ACB0010A367 /* DiskCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = D481BDC41CEC5ACB0010A367 /* DiskCache.swift */; };
@@ -21,24 +16,9 @@
 		D4ABC2281CEB49AA00BF78D3 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D4ABC2261CEB49AA00BF78D3 /* Main.storyboard */; };
 		D4ABC22A1CEB49AA00BF78D3 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D4ABC2291CEB49AA00BF78D3 /* Assets.xcassets */; };
 		D4ABC22D1CEB49AA00BF78D3 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D4ABC22B1CEB49AA00BF78D3 /* LaunchScreen.storyboard */; };
-		D4ABC26B1CEC44E400BF78D3 /* PINCache.m in Sources */ = {isa = PBXBuildFile; fileRef = D4ABC2651CEC44E400BF78D3 /* PINCache.m */; };
-		D4ABC26C1CEC44E400BF78D3 /* PINDiskCache.m in Sources */ = {isa = PBXBuildFile; fileRef = D4ABC2681CEC44E400BF78D3 /* PINDiskCache.m */; };
-		D4ABC26D1CEC44E400BF78D3 /* PINMemoryCache.m in Sources */ = {isa = PBXBuildFile; fileRef = D4ABC26A1CEC44E400BF78D3 /* PINMemoryCache.m */; };
-		D4ABC2811CEC455D00BF78D3 /* TMCache.m in Sources */ = {isa = PBXBuildFile; fileRef = D4ABC27B1CEC455D00BF78D3 /* TMCache.m */; };
-		D4ABC2821CEC455D00BF78D3 /* TMDiskCache.m in Sources */ = {isa = PBXBuildFile; fileRef = D4ABC27E1CEC455D00BF78D3 /* TMDiskCache.m */; };
-		D4ABC2831CEC455D00BF78D3 /* TMMemoryCache.m in Sources */ = {isa = PBXBuildFile; fileRef = D4ABC2801CEC455D00BF78D3 /* TMMemoryCache.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		D411CE111CEDE0D700F396CC /* YYCache.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = YYCache.h; sourceTree = "<group>"; };
-		D411CE121CEDE0D700F396CC /* YYCache.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = YYCache.m; sourceTree = "<group>"; };
-		D411CE131CEDE0D700F396CC /* YYDiskCache.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = YYDiskCache.h; sourceTree = "<group>"; };
-		D411CE141CEDE0D700F396CC /* YYDiskCache.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = YYDiskCache.m; sourceTree = "<group>"; };
-		D411CE151CEDE0D700F396CC /* YYKVStorage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = YYKVStorage.h; sourceTree = "<group>"; };
-		D411CE161CEDE0D700F396CC /* YYKVStorage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = YYKVStorage.m; sourceTree = "<group>"; };
-		D411CE171CEDE0D700F396CC /* YYMemoryCache.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = YYMemoryCache.h; sourceTree = "<group>"; };
-		D411CE181CEDE0D700F396CC /* YYMemoryCache.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = YYMemoryCache.m; sourceTree = "<group>"; };
-		D411CE1D1CEDE17B00F396CC /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
 		D4485AAE1CEF050700EC8C21 /* LinkedList.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LinkedList.swift; sourceTree = "<group>"; };
 		D481BDC31CEC5ACB0010A367 /* Cache.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Cache.swift; sourceTree = "<group>"; };
 		D481BDC41CEC5ACB0010A367 /* DiskCache.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DiskCache.swift; sourceTree = "<group>"; };
@@ -50,21 +30,6 @@
 		D4ABC2291CEB49AA00BF78D3 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		D4ABC22C1CEB49AA00BF78D3 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		D4ABC22E1CEB49AA00BF78D3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		D4ABC2631CEC44E400BF78D3 /* Nullability.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Nullability.h; sourceTree = "<group>"; };
-		D4ABC2641CEC44E400BF78D3 /* PINCache.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PINCache.h; sourceTree = "<group>"; };
-		D4ABC2651CEC44E400BF78D3 /* PINCache.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PINCache.m; sourceTree = "<group>"; };
-		D4ABC2661CEC44E400BF78D3 /* PINCacheObjectSubscripting.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PINCacheObjectSubscripting.h; sourceTree = "<group>"; };
-		D4ABC2671CEC44E400BF78D3 /* PINDiskCache.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PINDiskCache.h; sourceTree = "<group>"; };
-		D4ABC2681CEC44E400BF78D3 /* PINDiskCache.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PINDiskCache.m; sourceTree = "<group>"; };
-		D4ABC2691CEC44E400BF78D3 /* PINMemoryCache.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PINMemoryCache.h; sourceTree = "<group>"; };
-		D4ABC26A1CEC44E400BF78D3 /* PINMemoryCache.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PINMemoryCache.m; sourceTree = "<group>"; };
-		D4ABC27A1CEC455D00BF78D3 /* TMCache.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TMCache.h; sourceTree = "<group>"; };
-		D4ABC27B1CEC455D00BF78D3 /* TMCache.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TMCache.m; sourceTree = "<group>"; };
-		D4ABC27C1CEC455D00BF78D3 /* TMCacheBackgroundTaskManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TMCacheBackgroundTaskManager.h; sourceTree = "<group>"; };
-		D4ABC27D1CEC455D00BF78D3 /* TMDiskCache.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TMDiskCache.h; sourceTree = "<group>"; };
-		D4ABC27E1CEC455D00BF78D3 /* TMDiskCache.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TMDiskCache.m; sourceTree = "<group>"; };
-		D4ABC27F1CEC455D00BF78D3 /* TMMemoryCache.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TMMemoryCache.h; sourceTree = "<group>"; };
-		D4ABC2801CEC455D00BF78D3 /* TMMemoryCache.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TMMemoryCache.m; sourceTree = "<group>"; };
 		D4ABC2851CEC45F200BF78D3 /* Demo-Bridging-Header.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "Demo-Bridging-Header.h"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -73,29 +38,12 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D411CE1E1CEDE17B00F396CC /* libsqlite3.tbd in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		D411CE101CEDE0D700F396CC /* YYCache */ = {
-			isa = PBXGroup;
-			children = (
-				D411CE111CEDE0D700F396CC /* YYCache.h */,
-				D411CE121CEDE0D700F396CC /* YYCache.m */,
-				D411CE131CEDE0D700F396CC /* YYDiskCache.h */,
-				D411CE141CEDE0D700F396CC /* YYDiskCache.m */,
-				D411CE151CEDE0D700F396CC /* YYKVStorage.h */,
-				D411CE161CEDE0D700F396CC /* YYKVStorage.m */,
-				D411CE171CEDE0D700F396CC /* YYMemoryCache.h */,
-				D411CE181CEDE0D700F396CC /* YYMemoryCache.m */,
-			);
-			name = YYCache;
-			path = ../../YYCache/YYCache;
-			sourceTree = "<group>";
-		};
 		D481BDC21CEC5ACB0010A367 /* Track */ = {
 			isa = PBXGroup;
 			children = (
@@ -111,10 +59,6 @@
 		D4ABC2161CEB49AA00BF78D3 = {
 			isa = PBXGroup;
 			children = (
-				D411CE1D1CEDE17B00F396CC /* libsqlite3.tbd */,
-				D411CE101CEDE0D700F396CC /* YYCache */,
-				D4ABC2791CEC455D00BF78D3 /* TMCache */,
-				D4ABC2621CEC44E400BF78D3 /* PINCache */,
 				D481BDC21CEC5ACB0010A367 /* Track */,
 				D4ABC2211CEB49AA00BF78D3 /* Demo */,
 				D4ABC2201CEB49AA00BF78D3 /* Products */,
@@ -141,37 +85,6 @@
 				D4ABC2851CEC45F200BF78D3 /* Demo-Bridging-Header.h */,
 			);
 			path = Demo;
-			sourceTree = "<group>";
-		};
-		D4ABC2621CEC44E400BF78D3 /* PINCache */ = {
-			isa = PBXGroup;
-			children = (
-				D4ABC2631CEC44E400BF78D3 /* Nullability.h */,
-				D4ABC2641CEC44E400BF78D3 /* PINCache.h */,
-				D4ABC2651CEC44E400BF78D3 /* PINCache.m */,
-				D4ABC2661CEC44E400BF78D3 /* PINCacheObjectSubscripting.h */,
-				D4ABC2671CEC44E400BF78D3 /* PINDiskCache.h */,
-				D4ABC2681CEC44E400BF78D3 /* PINDiskCache.m */,
-				D4ABC2691CEC44E400BF78D3 /* PINMemoryCache.h */,
-				D4ABC26A1CEC44E400BF78D3 /* PINMemoryCache.m */,
-			);
-			name = PINCache;
-			path = ../../PINCache/PINCache;
-			sourceTree = "<group>";
-		};
-		D4ABC2791CEC455D00BF78D3 /* TMCache */ = {
-			isa = PBXGroup;
-			children = (
-				D4ABC27A1CEC455D00BF78D3 /* TMCache.h */,
-				D4ABC27B1CEC455D00BF78D3 /* TMCache.m */,
-				D4ABC27C1CEC455D00BF78D3 /* TMCacheBackgroundTaskManager.h */,
-				D4ABC27D1CEC455D00BF78D3 /* TMDiskCache.h */,
-				D4ABC27E1CEC455D00BF78D3 /* TMDiskCache.m */,
-				D4ABC27F1CEC455D00BF78D3 /* TMMemoryCache.h */,
-				D4ABC2801CEC455D00BF78D3 /* TMMemoryCache.m */,
-			);
-			name = TMCache;
-			path = ../../TMCache/TMCache;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -245,20 +158,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D411CE1A1CEDE0D700F396CC /* YYDiskCache.m in Sources */,
 				D4ABC2251CEB49AA00BF78D3 /* ViewController.swift in Sources */,
 				D481BDC61CEC5ACB0010A367 /* Cache.swift in Sources */,
-				D4ABC2821CEC455D00BF78D3 /* TMDiskCache.m in Sources */,
-				D4ABC26C1CEC44E400BF78D3 /* PINDiskCache.m in Sources */,
-				D411CE191CEDE0D700F396CC /* YYCache.m in Sources */,
 				D481BDC81CEC5ACB0010A367 /* MemoryCache.swift in Sources */,
-				D4ABC2811CEC455D00BF78D3 /* TMCache.m in Sources */,
-				D411CE1C1CEDE0D700F396CC /* YYMemoryCache.m in Sources */,
-				D411CE1B1CEDE0D700F396CC /* YYKVStorage.m in Sources */,
 				D4ABC2231CEB49AA00BF78D3 /* AppDelegate.swift in Sources */,
-				D4ABC2831CEC455D00BF78D3 /* TMMemoryCache.m in Sources */,
-				D4ABC26B1CEC44E400BF78D3 /* PINCache.m in Sources */,
-				D4ABC26D1CEC44E400BF78D3 /* PINMemoryCache.m in Sources */,
 				D4485AAF1CEF050700EC8C21 /* LinkedList.swift in Sources */,
 				D481BDC71CEC5ACB0010A367 /* DiskCache.swift in Sources */,
 			);
