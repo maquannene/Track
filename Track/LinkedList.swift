@@ -7,11 +7,12 @@
 //
 
 import Foundation
+import QuartzCore
 
 class Node<T: Equatable> {
     weak var preNode: Node?
     weak var nextNode: Node?
-    let data: T
+    var data: T
     
     init(data: T) {
         self.data = data
@@ -136,6 +137,7 @@ protocol LRUObjectBase: Equatable {
     var key: String { get }
     var value: AnyObject { get set }
     var cost: UInt { get set }
+    var age: NSTimeInterval { get set }
 }
 
 class LRU<T: LRUObjectBase> {
@@ -161,6 +163,12 @@ class LRU<T: LRUObjectBase> {
     var costLimit: UInt = UInt.max {
         didSet {
             trimToCost(costLimit)
+        }
+    }
+    
+    var ageLimit: NSTimeInterval = DBL_MAX {
+        didSet {
+            trimToAge(ageLimit)
         }
     }
     
@@ -197,6 +205,7 @@ class LRU<T: LRUObjectBase> {
         if let node = _dic.objectForKey(key) as? NodeType {
             _linkedList.removeNode(node)
             _linkedList.insertNode(node, atIndex: 0)
+            node.data.age = CACurrentMediaTime()
             return node.data
         }
         return nil
@@ -241,6 +250,9 @@ class LRU<T: LRUObjectBase> {
             _dic.removeObjectForKey(newTailNode!.data.key)
             newTailNode = newTailNode?.preNode
         }
+        if newTailNode == nil {
+            _linkedList.headNode = nil
+        }
         newTailNode?.nextNode = nil
         _linkedList.tailNode = newTailNode
     }
@@ -255,6 +267,27 @@ class LRU<T: LRUObjectBase> {
             _linkedList.count -= 1
             _dic.removeObjectForKey(newTailNode!.data.key)
             newTailNode = newTailNode?.preNode
+        }
+        if newTailNode == nil {
+            _linkedList.headNode = nil
+        }
+        newTailNode?.nextNode = nil
+        _linkedList.tailNode = newTailNode
+    }
+    
+    func trimToAge(age: NSTimeInterval) {
+        if self.ageLimit < age {
+            return
+        }
+        var newTailNode: NodeType? = _linkedList.tailNode
+        while (newTailNode != nil && newTailNode?.data.age < age) {
+            self.cost -= newTailNode!.data.cost
+            _linkedList.count -= 1
+            _dic.removeObjectForKey(newTailNode!.data.key)
+            newTailNode = newTailNode?.preNode
+        }
+        if newTailNode == nil {
+            _linkedList.headNode = nil
         }
         newTailNode?.nextNode = nil
         _linkedList.tailNode = newTailNode

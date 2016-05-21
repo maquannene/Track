@@ -28,10 +28,12 @@ class MemoryObject: LRUObjectBase {
     var key: String = ""
     var value: AnyObject
     var cost: UInt = 0
+    var age: NSTimeInterval
     init(key: String, value: AnyObject, cost: UInt = 0) {
         self.key = key
         self.value = value
         self.cost = cost
+        self.age = CACurrentMediaTime()
     }
 }
 
@@ -86,6 +88,20 @@ public class MemoryCache {
             let costLimit = _cache.costLimit
             unlock()
             return costLimit
+        }
+    }
+    
+    public var ageLimit: NSTimeInterval {
+        set {
+            lock()
+            _cache.ageLimit = newValue
+            unlock()
+        }
+        get {
+            lock()
+            let ageLimit = _cache.ageLimit
+            unlock()
+            return ageLimit
         }
     }
     
@@ -158,6 +174,14 @@ public class MemoryCache {
         }
     }
     
+    public func trimToAge(age: NSTimeInterval, completion: MemoryCacheAsyncCompletion?) {
+        dispatch_async(_queue) { [weak self] in
+            guard let strongSelf = self else { completion?(cache: nil, key: nil, object: nil); return }
+            strongSelf.trimToAge(age)
+            completion?(cache: strongSelf, key: nil, object: nil)
+        }
+    }
+    
     //  MARK: Sync
     /**
      Sync method to operate cache
@@ -197,6 +221,12 @@ public class MemoryCache {
     public func trimToCost(cost: UInt) {
         lock()
         _cache.trimToCost(cost)
+        unlock()
+    }
+    
+    public func trimToAge(age: NSTimeInterval) {
+        lock()
+        _cache.trimToAge(age)
         unlock()
     }
     
