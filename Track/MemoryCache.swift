@@ -24,20 +24,19 @@
 import Foundation
 import UIKit
 
-class MemoryObject: LRUObjectBase {
+class MemoryCacheObject: LRUObjectBase {
     var key: String = ""
-    var value: AnyObject
     var cost: UInt = 0
-    var age: NSTimeInterval
+    var age: NSTimeInterval = CACurrentMediaTime()
+    var value: AnyObject
     init(key: String, value: AnyObject, cost: UInt = 0) {
         self.key = key
         self.value = value
         self.cost = cost
-        self.age = CACurrentMediaTime()
     }
 }
 
-func == (lhs: MemoryObject, rhs: MemoryObject) -> Bool {
+func == (lhs: MemoryCacheObject, rhs: MemoryCacheObject) -> Bool {
     return lhs.key == rhs.key
 }
 
@@ -105,7 +104,7 @@ public class MemoryCache {
         }
     }
     
-    private let _cache: LRU = LRU<MemoryObject>()
+    private let _cache: LRU = LRU<MemoryCacheObject>()
     
     private let _queue: dispatch_queue_t = dispatch_queue_create(TrackCachePrefix + String(MemoryCache), DISPATCH_QUEUE_CONCURRENT)
     
@@ -188,12 +187,12 @@ public class MemoryCache {
      */
     public func set(object object: AnyObject, forKey key: String, cost: UInt = 0) {
         lock()
-        _cache.set(object: MemoryObject(key: key, value: object, cost: cost), forKey: key)
+        _cache.set(object: MemoryCacheObject(key: key, value: object, cost: cost), forKey: key)
         unlock()
     }
     
     public func object(forKey key: String) -> AnyObject? {
-        var object: MemoryObject? = nil
+        var object: MemoryCacheObject? = nil
         lock()
         object = _cache.object(forKey: key)
         unlock()

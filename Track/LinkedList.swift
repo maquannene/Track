@@ -135,7 +135,6 @@ class LinkedList<T: Equatable> {
 
 protocol LRUObjectBase: Equatable {
     var key: String { get }
-    var value: AnyObject { get set }
     var cost: UInt { get set }
     var age: NSTimeInterval { get set }
 }
@@ -239,7 +238,11 @@ class LRU<T: LRUObjectBase> {
      - parameter count: number of the value
      */
     func trimToCount(count: UInt) {
-        if _linkedList.count < count {
+        if _linkedList.count <= count {
+            return
+        }
+        if count == 0 {
+            removeAllObjects()
             return
         }
         let trimCount: UInt = _linkedList.count - count
@@ -258,7 +261,11 @@ class LRU<T: LRUObjectBase> {
     }
     
     func trimToCost(cost: UInt) {
-        if self.cost < cost {
+        if self.cost <= cost {
+            return
+        }
+        if cost == 0 {
+            removeAllObjects()
             return
         }
         var newTailNode: NodeType? = _linkedList.tailNode
@@ -276,7 +283,11 @@ class LRU<T: LRUObjectBase> {
     }
     
     func trimToAge(age: NSTimeInterval) {
-        if self.ageLimit < age {
+        if self.ageLimit <= age {
+            return
+        }
+        if age == 0 {
+            removeAllObjects()
             return
         }
         var newTailNode: NodeType? = _linkedList.tailNode
