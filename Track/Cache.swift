@@ -90,10 +90,10 @@ public class Cache {
         }
     }
     
-    public func removeAllObject(completion: CacheAsyncCompletion?) {
+    public func removeAllObjects(completion: CacheAsyncCompletion?) {
         asyncGroup(2, operation: { completion in
-            self.memoryCache.removeAllObject { _, _, _ in completion?() }
-            self.diskCache.removeAllObject { _, _, _ in completion?() }
+            self.memoryCache.removeAllObjects { _, _, _ in completion?() }
+            self.diskCache.removeAllObjects { _, _, _ in completion?() }
         }, notifyQueue: _queue) { [weak self] in
             guard let strongSelf = self else { completion?(cache: nil, key: nil, object: nil); return }
             completion?(cache: strongSelf, key: nil, object: nil)
@@ -126,9 +126,9 @@ public class Cache {
         diskCache.removeObject(forKey: key)
     }
     
-    public func removeAllObject() {
-        memoryCache.removeAllObject()
-        diskCache.removeAllObject()
+    public func removeAllObjects() {
+        memoryCache.removeAllObjects()
+        diskCache.removeAllObjects()
     }
     
     public subscript(key: String) -> NSCoding? {

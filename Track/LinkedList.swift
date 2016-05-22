@@ -136,16 +136,11 @@ class LinkedList<T: Equatable> {
 protocol LRUObjectBase: Equatable {
     var key: String { get }
     var cost: UInt { get set }
-    var age: NSTimeInterval { get set }
 }
 
 class LRU<T: LRUObjectBase> {
     
     private typealias NodeType = Node<T>
-    
-    private var _dic: NSMutableDictionary = NSMutableDictionary()
-    
-    private let _linkedList: LinkedList = LinkedList<T>()
     
     var count: UInt {
         return _linkedList.count
@@ -153,23 +148,9 @@ class LRU<T: LRUObjectBase> {
     
     private(set) var cost: UInt = 0
     
-    var countLimit: UInt = UInt.max {
-        didSet {
-            trimToCount(countLimit)
-        }
-    }
+    private var _dic: NSMutableDictionary = NSMutableDictionary()
     
-    var costLimit: UInt = UInt.max {
-        didSet {
-            trimToCost(costLimit)
-        }
-    }
-    
-    var ageLimit: NSTimeInterval = DBL_MAX {
-        didSet {
-            trimToAge(ageLimit)
-        }
-    }
+    private let _linkedList: LinkedList = LinkedList<T>()
     
     /**
      Set object for specified key, and add to head.
@@ -178,18 +159,18 @@ class LRU<T: LRUObjectBase> {
      - parameter key:    key
      */
     func set(object object: T, forKey key: String) {
-        let node = Node(data: object)
-        _dic.setObject(node, forKey: node.data.key)
-        _linkedList.insertNode(node, atIndex: 0)
-        
-        cost += object.cost
-        
-        if cost > costLimit {
-            trimToCost(costLimit)
+        if let node = _dic.objectForKey(key) as? NodeType {
+            cost -= node.data.cost
+            cost += object.cost
+            node.data = object
+            _linkedList.removeNode(node)
+            _linkedList.insertNode(node, atIndex: 0)
         }
-        
-        if _linkedList.count > countLimit {
-            trimToCount(countLimit)
+        else {
+            let node = Node(data: object)
+            cost += object.cost
+            _dic.setObject(node, forKey: node.data.key)
+            _linkedList.insertNode(node, atIndex: 0)
         }
     }
     
@@ -204,7 +185,6 @@ class LRU<T: LRUObjectBase> {
         if let node = _dic.objectForKey(key) as? NodeType {
             _linkedList.removeNode(node)
             _linkedList.insertNode(node, atIndex: 0)
-            node.data.age = CACurrentMediaTime()
             return node.data
         }
         return nil
@@ -215,12 +195,14 @@ class LRU<T: LRUObjectBase> {
      
      - parameter key:
      */
-    func removeObject(forKey key: String) {
+    func removeObject(forKey key: String) -> T? {
         if let node = _dic.objectForKey(key) as? NodeType {
             _dic.removeObjectForKey(node.data.key)
             _linkedList.removeNode(node)
             cost -= node.data.cost
+            return node.data
         }
+        return nil
     }
     
     /**
@@ -232,76 +214,17 @@ class LRU<T: LRUObjectBase> {
         cost = 0
     }
     
-    /**
-     according to LRU, remove number of the value of the least frequently used
-     
-     - parameter count: number of the value
-     */
-    func trimToCount(count: UInt) {
-        if _linkedList.count <= count {
+    func removeLastObject() {
+        if let lastNode = _linkedList.tailNode as NodeType? {
+            _dic.removeObjectForKey(lastNode.data.key)
+            _linkedList.removeNode(lastNode)
+            cost -= lastNode.data.cost
             return
         }
-        if count == 0 {
-            removeAllObjects()
-            return
-        }
-        let trimCount: UInt = _linkedList.count - count
-        var newTailNode: NodeType? = _linkedList.tailNode
-        for _ in 0 ..< trimCount {
-            _linkedList.count -= 1
-            cost -= newTailNode!.data.cost
-            _dic.removeObjectForKey(newTailNode!.data.key)
-            newTailNode = newTailNode?.preNode
-        }
-        if newTailNode == nil {
-            _linkedList.headNode = nil
-        }
-        newTailNode?.nextNode = nil
-        _linkedList.tailNode = newTailNode
     }
     
-    func trimToCost(cost: UInt) {
-        if self.cost <= cost {
-            return
-        }
-        if cost == 0 {
-            removeAllObjects()
-            return
-        }
-        var newTailNode: NodeType? = _linkedList.tailNode
-        while (self.cost > cost) {
-            self.cost -= newTailNode!.data.cost
-            _linkedList.count -= 1
-            _dic.removeObjectForKey(newTailNode!.data.key)
-            newTailNode = newTailNode?.preNode
-        }
-        if newTailNode == nil {
-            _linkedList.headNode = nil
-        }
-        newTailNode?.nextNode = nil
-        _linkedList.tailNode = newTailNode
-    }
-    
-    func trimToAge(age: NSTimeInterval) {
-        if self.ageLimit <= age {
-            return
-        }
-        if age == 0 {
-            removeAllObjects()
-            return
-        }
-        var newTailNode: NodeType? = _linkedList.tailNode
-        while (newTailNode != nil && newTailNode?.data.age < age) {
-            self.cost -= newTailNode!.data.cost
-            _linkedList.count -= 1
-            _dic.removeObjectForKey(newTailNode!.data.key)
-            newTailNode = newTailNode?.preNode
-        }
-        if newTailNode == nil {
-            _linkedList.headNode = nil
-        }
-        newTailNode?.nextNode = nil
-        _linkedList.tailNode = newTailNode
+    func lastObject() -> T? {
+        return _linkedList.tailNode?.data
     }
     
     subscript(key: String) -> T? {

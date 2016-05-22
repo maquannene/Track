@@ -23,7 +23,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             print((endTime - startTime) * 1000)
         }
         
-        let time: UInt = 2
+        let time: UInt = 5
         
 //        let dd = NSMutableDictionary()
 //        printTime {
@@ -106,26 +106,33 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 //        }
 //
 //          Track
-        let Tr = MemoryCache.shareInstance
-        
-//        Tr.countLimit = 3
+//        let Tr = MemoryCache.shareInstance
+//        
+////        Tr.countLimit = 3
 //        Tr.costLimit = 7
-        
-        printTime {
-            for i in 0 ... time {
-                //            print(" p = \(i)")
-//                Tr["\(i)"] = "\(i)"
-                Tr.set(object: "\(i)", forKey: "\(i)", cost: i)
-            }
-        }
-        
+//        
 //        printTime {
 //            for i in 0 ... time {
-//                if i < 3 {
-//                    Tr.removeObject(forKey: "\(i)")
-//                }
+//                //            print(" p = \(i)")
+////                Tr["\(i)"] = "\(i)"
+//                Tr.set(object: "\(i)", forKey: "\(i)", cost: i * 2)
 //            }
 //        }
+//        
+////        printTime {
+////            for i in 0 ... time {
+////                if i < 3 {
+////                    Tr.removeObject(forKey: "\(i)")
+////                }
+////            }
+////        }
+
+        let trd = DiskCache.shareInstance
+        trd!.countLimit = 2
+        trd!.set(object: "maquan", forKey: "mingzi")
+        trd!.set(object: "maquan", forKey: "mingzi1")
+        trd!.set(object: "maquan", forKey: "mingzi3")
+        trd!.removeAllObjects()
         
         return true
     }

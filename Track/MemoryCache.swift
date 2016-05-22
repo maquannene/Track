@@ -62,43 +62,49 @@ public class MemoryCache {
         }
     }
     
+    private var _countLimit: UInt = UInt.max
     public var countLimit: UInt {
         set {
             lock()
-            _cache.countLimit = newValue
+            _costLimit = newValue
+            _unsafeTrimToCount(newValue)
             unlock()
         }
         get {
             lock()
-            let countLimit = _cache.countLimit
+            let countLimit = _countLimit
             unlock()
             return countLimit
         }
     }
     
+    private var _costLimit: UInt = UInt.max
     public var costLimit: UInt {
         set {
             lock()
-            _cache.costLimit = newValue
+            _costLimit = newValue
+            _unsafeTrimToCost(newValue)
             unlock()
         }
         get {
             lock()
-            let costLimit = _cache.costLimit
+            let costLimit = _costLimit
             unlock()
             return costLimit
         }
     }
     
+    private var _ageLimit: NSTimeInterval = DBL_MAX
     public var ageLimit: NSTimeInterval {
         set {
             lock()
-            _cache.ageLimit = newValue
+            _ageLimit = newValue
+            _unsafeTrimToAge(newValue)
             unlock()
         }
         get {
             lock()
-            let ageLimit = _cache.ageLimit
+            let ageLimit = _ageLimit
             unlock()
             return ageLimit
         }
@@ -149,10 +155,10 @@ public class MemoryCache {
         }
     }
     
-    public func removeAllObject(completion: MemoryCacheAsyncCompletion?) {
+    public func removeAllObjects(completion: MemoryCacheAsyncCompletion?) {
         dispatch_async(_queue) { [weak self] in
             guard let strongSelf = self else { completion?(cache: nil, key: nil, object: nil); return }
-            strongSelf.removeAllObject()
+            strongSelf.removeAllObjects()
             completion?(cache: strongSelf, key: nil, object: nil)
         }
     }
@@ -188,6 +194,12 @@ public class MemoryCache {
     public func set(object object: AnyObject, forKey key: String, cost: UInt = 0) {
         lock()
         _cache.set(object: MemoryCacheObject(key: key, value: object, cost: cost), forKey: key)
+        if _cache.cost > _costLimit {
+            _unsafeTrimToCost(_costLimit)
+        }
+        if _cache.count > _countLimit {
+            _unsafeTrimToCount(_countLimit)
+        }
         unlock()
     }
     
@@ -195,6 +207,7 @@ public class MemoryCache {
         var object: MemoryCacheObject? = nil
         lock()
         object = _cache.object(forKey: key)
+        object?.age = CACurrentMediaTime()
         unlock()
         return object?.value
     }
@@ -205,7 +218,7 @@ public class MemoryCache {
         unlock()
     }
     
-    public func removeAllObject() {
+    public func removeAllObjects() {
         lock()
         _cache.removeAllObjects()
         unlock()
@@ -213,22 +226,22 @@ public class MemoryCache {
     
     public func trimToCount(count: UInt) {
         lock()
-        _cache.trimToCount(count)
+        _unsafeTrimToCount(count)
         unlock()
     }
-    
+
     public func trimToCost(cost: UInt) {
         lock()
-        _cache.trimToCost(cost)
+        _unsafeTrimToCost(cost)
         unlock()
     }
-    
+
     public func trimToAge(age: NSTimeInterval) {
         lock()
-        _cache.trimToAge(age)
+        _unsafeTrimToAge(age)
         unlock()
     }
-    
+
     public subscript(key: String) -> AnyObject? {
         get {
             return object(forKey: key)
@@ -246,7 +259,50 @@ public class MemoryCache {
     //  MARK: Private
     @objc private func _didReceiveMemoryWarningNotification() {
         if _shouldRemoveAllObjectWhenMemoryWarning {
-            removeAllObject(nil)
+            removeAllObjects(nil)
+        }
+    }
+    
+    private func _unsafeTrimToCount(count: UInt) {
+        if _cache.count <= count {
+            return
+        }
+        if count == 0 {
+            _cache.removeAllObjects()
+        }
+        var newTailObject: MemoryCacheObject? = _cache.lastObject()
+        while (newTailObject != nil && _cache.count > count) {
+            _cache.removeLastObject()
+            newTailObject = _cache.lastObject()
+        }
+    }
+ 
+    private func _unsafeTrimToCost(cost: UInt) {
+        if _cache.cost <= cost {
+            return
+        }
+        if cost == 0 {
+            _cache.removeAllObjects()
+            return
+        }
+        var newTailObject: MemoryCacheObject? = _cache.lastObject()
+        while (newTailObject != nil && _cache.cost > cost) {
+            _cache.removeLastObject()
+            newTailObject = _cache.lastObject()
+        }
+    }
+    
+    private func _unsafeTrimToAge(age: NSTimeInterval) {
+        if _ageLimit <= age {
+            return
+        }
+        if age == 0 {
+            _cache.removeAllObjects()
+        }
+        var newTailObject: MemoryCacheObject? = _cache.lastObject()
+        while (newTailObject != nil && newTailObject?.age < age) {
+            _cache.removeLastObject()
+            newTailObject = _cache.lastObject()
         }
     }
 }
