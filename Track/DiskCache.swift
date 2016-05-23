@@ -78,8 +78,8 @@ public class DiskCache {
         set {
             lock()
             _countLimit = newValue
-            _unsafeTrimToCount(newValue)
             unlock()
+            trimToCount(newValue)
         }
         get {
             lock()
@@ -94,8 +94,8 @@ public class DiskCache {
         set {
             lock()
             _costLimit = newValue
-            _unsafeTrimToCost(newValue)
             unlock()
+            trimToCost(newValue)
         }
         get {
             lock()
@@ -105,19 +105,19 @@ public class DiskCache {
         }
     }
     
-    private var _dateLimit: NSDate = NSDate.distantFuture()
-    public var dateLimit: NSDate {
+    private var _ageLimit: NSTimeInterval = DBL_MAX
+    public var ageLimit: NSTimeInterval {
         set {
             lock()
-            _dateLimit = newValue
-            _unsafeTrimToDate(newValue)
+            _ageLimit = newValue
             unlock()
+            trimToAge(newValue)
         }
         get {
             lock()
-            let dateLimit = _dateLimit
+            let ageLimit = _ageLimit
             unlock()
-            return dateLimit
+            return ageLimit
         }
     }
     
@@ -186,26 +186,26 @@ public class DiskCache {
         }
     }
     
-    public func trimToCount(count: UInt, completion: DiskCacheAsyncCompletion?) {
+    public func trimToCount(countLimit: UInt, completion: DiskCacheAsyncCompletion?) {
         dispatch_async(_queue) { [weak self] in
             guard let strongSelf = self else { completion?(cache: nil, key: nil, object: nil); return }
-            strongSelf.trimToCount(count)
+            strongSelf.trimToCount(countLimit)
             completion?(cache: strongSelf, key: nil, object: nil)
         }
     }
     
-    public func trimToCost(cost: UInt, completion: DiskCacheAsyncCompletion?) {
+    public func trimToCost(costLimit: UInt, completion: DiskCacheAsyncCompletion?) {
         dispatch_async(_queue) { [weak self] in
             guard let strongSelf = self else { completion?(cache: nil, key: nil, object: nil); return }
-            strongSelf.trimToCost(cost)
+            strongSelf.trimToCost(costLimit)
             completion?(cache: strongSelf, key: nil, object: nil)
         }
     }
     
-    public func trimToDate(date: NSDate, completion: DiskCacheAsyncCompletion?) {
+    public func trimToAge(ageLimit: NSTimeInterval, completion: DiskCacheAsyncCompletion?) {
         dispatch_async(_queue) { [weak self] in
             guard let strongSelf = self else { completion?(cache: nil, key: nil, object: nil); return }
-            strongSelf.trimToDate(date)
+            strongSelf.trimToAge(ageLimit)
             completion?(cache: strongSelf, key: nil, object: nil)
         }
     }
@@ -285,39 +285,39 @@ public class DiskCache {
         unlock()
     }
     
-    public func trimToCount(count: UInt) {
-        if self.totalCount <= count {
+    public func trimToCount(countLimit: UInt) {
+        if self.totalCount <= countLimit {
             return
         }
-        if count == 0 {
+        if countLimit == 0 {
             removeAllObjects()
+            return
         }
         lock()
-        _unsafeTrimToCount(count)
+        _unsafeTrimToCount(countLimit)
         unlock()
     }
     
-    public func trimToCost(cost: UInt) {
-        if self.totalCost <= cost {
+    public func trimToCost(costLimit: UInt) {
+        if self.totalCost <= costLimit {
             return
         }
-        if cost == 0 {
+        if costLimit == 0 {
             removeAllObjects()
+            return
         }
         lock()
-        _unsafeTrimToCost(cost)
+        _unsafeTrimToCost(costLimit)
         unlock()
     }
     
-    public func trimToDate(date: NSDate) {
-        if self.dateLimit.timeIntervalSince1970 <= date.timeIntervalSince1970 {
+    public func trimToAge(ageLimit: NSTimeInterval) {
+        if ageLimit <= 0 {
+            removeAllObjects()
             return
         }
-        if date.timeIntervalSince1970 == 0 {
-            removeAllObjects()
-        }
         lock()
-        _unsafeTrimToDate(date)
+        _unsafeTrimToAge(ageLimit)
         unlock()
     }
     
@@ -367,13 +367,11 @@ public class DiskCache {
                         fileSize = infosDic[NSURLTotalFileAllocatedSizeKey] as? NSNumber {
                         fileInfos.append(DiskCacheObject(key: key, cost: fileSize.unsignedLongValue, date: date))
                     }
-                    
                 }
                 catch {
                     return false
                 }
             }
-            
             fileInfos.sortInPlace { $0.date.timeIntervalSince1970 < $1.date.timeIntervalSince1970 }
             fileInfos.forEach {
                 _cache.set(object: $0, forKey: $0.key)
@@ -384,44 +382,50 @@ public class DiskCache {
         return true
     }
     
-    private func _unsafeTrimToCount(count: UInt) {
-        var newTailObject: DiskCacheObject? = _cache.lastObject()
-        while (newTailObject != nil && _cache.count > count) {
-            let fileURL = _generateFileURL(newTailObject!.key, path: cacheURL)
-            if NSFileManager.defaultManager().fileExistsAtPath(fileURL.absoluteString) {
-                do {
-                    try NSFileManager.defaultManager().removeItemAtPath(fileURL.absoluteString)
-                    _cache.removeLastObject()
-                    newTailObject = _cache.lastObject()
-                } catch {}
+    private func _unsafeTrimToCount(countLimit: UInt) {
+        if var lastObject: DiskCacheObject = _cache.lastObject() {
+            while (_cache.count > countLimit) {
+                let fileURL = _generateFileURL(lastObject.key, path: cacheURL)
+                if NSFileManager.defaultManager().fileExistsAtPath(fileURL.absoluteString) {
+                    do {
+                        try NSFileManager.defaultManager().removeItemAtPath(fileURL.absoluteString)
+                        _cache.removeLastObject()
+                        guard let newLastObject = _cache.lastObject() else { break }
+                        lastObject = newLastObject
+                    } catch {}
+                }
             }
         }
     }
     
-    private func _unsafeTrimToCost(cost: UInt) {
-        var newTailObject: DiskCacheObject? = _cache.lastObject()
-        while (newTailObject != nil && _cache.cost > cost) {
-            let fileURL = _generateFileURL(newTailObject!.key, path: cacheURL)
-            if NSFileManager.defaultManager().fileExistsAtPath(fileURL.absoluteString) {
-                do {
-                    try NSFileManager.defaultManager().removeItemAtPath(fileURL.absoluteString)
-                    _cache.removeLastObject()
-                    newTailObject = _cache.lastObject()
-                } catch {}
+    private func _unsafeTrimToCost(costLimit: UInt) {
+        if var lastObject: DiskCacheObject = _cache.lastObject() {
+            while (_cache.cost > costLimit) {
+                let fileURL = _generateFileURL(lastObject.key, path: cacheURL)
+                if NSFileManager.defaultManager().fileExistsAtPath(fileURL.absoluteString) {
+                    do {
+                        try NSFileManager.defaultManager().removeItemAtPath(fileURL.absoluteString)
+                        _cache.removeLastObject()
+                        guard let newLastObject = _cache.lastObject() else { break }
+                        lastObject = newLastObject
+                    } catch {}
+                }
             }
         }
     }
     
-    private func _unsafeTrimToDate(date: NSDate) {
-        var newTailObject: DiskCacheObject? = _cache.lastObject()
-        while (newTailObject != nil && newTailObject!.date.timeIntervalSince1970 < date.timeIntervalSince1970) {
-            let fileURL = _generateFileURL(newTailObject!.key, path: cacheURL)
-            if NSFileManager.defaultManager().fileExistsAtPath(fileURL.absoluteString) {
-                do {
-                    try NSFileManager.defaultManager().removeItemAtPath(fileURL.absoluteString)
-                    _cache.removeLastObject()
-                    newTailObject = _cache.lastObject()
-                } catch {}
+    private func _unsafeTrimToAge(ageLimit: NSTimeInterval) {
+        if var lastObject: DiskCacheObject = _cache.lastObject() {
+            while (lastObject.date.timeIntervalSince1970 < NSDate().timeIntervalSince1970 - ageLimit) {
+                let fileURL = _generateFileURL(lastObject.key, path: cacheURL)
+                if NSFileManager.defaultManager().fileExistsAtPath(fileURL.absoluteString) {
+                    do {
+                        try NSFileManager.defaultManager().removeItemAtPath(fileURL.absoluteString)
+                        _cache.removeLastObject()
+                        guard let newLastObject = _cache.lastObject() else { break }
+                        lastObject = newLastObject
+                    } catch {}
+                }
             }
         }
     }
