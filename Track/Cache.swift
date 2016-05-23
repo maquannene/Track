@@ -48,7 +48,7 @@ public class Cache {
     /**
      A share cache, contain a thread safe memory cache and a thread safe diskcache
      */
-    public static let shareInstance = Cache(name: TrackCacheDefauleName)
+    public static let shareInstance = Cache(name: TrackCacheDefauleName)!
     
     /**
      Design constructor

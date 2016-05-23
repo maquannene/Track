@@ -159,7 +159,7 @@ public class DiskCache {
     /**
      A share disk cache, name "defauleTrackCache" path "Library/Caches/"
      */
-    public static let shareInstance = DiskCache(name: TrackCacheDefauleName)
+    public static let shareInstance = DiskCache(name: TrackCacheDefauleName)!
     
     /**
      Design constructor
