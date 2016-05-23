@@ -8,26 +8,55 @@
 
 import Foundation
 
+/**
+ Cache async operation callback
+ */
 public typealias CacheAsyncCompletion = (cache: Cache?, key: String?, object: AnyObject?) -> Void
 
-public let TrackCachePrefix: String = "com.trackcache."
+/**
+ Track Cache Prefix, use on default disk cache folder name and queue name
+ */
+let TrackCachePrefix: String = "com.trackcache."
 
-public let TrackCacheDefauleName: String = "defauleTrackCache"
+/**
+ Track Cache default name, default disk cache folder name
+ */
+let TrackCacheDefauleName: String = "defauleTrackCache"
 
+/**
+ TrackCache is a thread safe cache, contain a thread safe memory cache and a thread safe diskcache
+ */
 public class Cache {
     
+    /**
+     cache name, used to create disk cache folder
+     */
     public let name: String
     
+    /**
+     Thread safe memeory cache
+     */
     public let memoryCache: MemoryCache
     
+    /**
+     Thread safe disk cache
+     */
     public let diskCache: DiskCache
     
     private let _queue: dispatch_queue_t = dispatch_queue_create(TrackCachePrefix + (String(Cache)), DISPATCH_QUEUE_CONCURRENT)
     
-    //  MARK:
-    //  MARK: Public
+    /**
+     A share cache, contain a thread safe memory cache and a thread safe diskcache
+     */
     public static let shareInstance = Cache(name: TrackCacheDefauleName)
     
+    /**
+     Design constructor
+     The same name has the same diskCache, but different memorycache.
+     
+     - parameter name: cache name
+     - parameter path: diskcache path
+     */
     public init?(name: String, path: String) {
         if name.characters.count == 0 || path.characters.count == 0 {
             return nil
@@ -37,13 +66,25 @@ public class Cache {
         self.memoryCache = MemoryCache.shareInstance
     }
     
+    /**
+     Convenience constructor, use default path Library/Caches/
+     
+     - parameter name: cache name
+     */
     public convenience init?(name: String){
         self.init(name: name, path: NSSearchPathForDirectoriesInDomains(.CachesDirectory, .UserDomainMask, true)[0])
     }
     
+    
     //  MARK: Async
+    
     /**
-     ASync method to operate cache
+     Async store an object for the unique key in the memory cache and disk cache
+     completion will be call after object has been store in memory cache and disk cache
+     
+     - parameter object:     object must be implement NSCoding protocal
+     - parameter key:        unique key
+     - parameter completion: stroe completion call back
      */
     public func set(object object: NSCoding, forKey key: String, completion: CacheAsyncCompletion?) {
         asyncGroup(2, operation: { completion in
@@ -55,6 +96,13 @@ public class Cache {
         }
     }
     
+    /**
+     Async search object according to unique key
+     search from memory cache first, if not found, will search from diskCache
+     
+     - parameter key:        object unique key
+     - parameter completion: search completion call back
+     */
     public func object(forKey key: String, completion: CacheAsyncCompletion?) {
         dispatch_async(_queue) { [weak self] in
             guard let strongSelf = self else { return }
@@ -80,6 +128,12 @@ public class Cache {
         }
     }
     
+    /**
+     Async remove object from memory cache and disk cache
+     
+     - parameter key:        object unique key
+     - parameter completion: remove completion call back
+     */
     public func removeObject(forKey key: String, completion: CacheAsyncCompletion?) {
         asyncGroup(2, operation: { completion in
             self.memoryCache.removeObject(forKey: key) { _, _, _ in completion?() }
@@ -90,6 +144,11 @@ public class Cache {
         }
     }
     
+    /**
+     Async remove all objects
+     
+     - parameter completion: remove completion call back
+     */
     public func removeAllObjects(completion: CacheAsyncCompletion?) {
         asyncGroup(2, operation: { completion in
             self.memoryCache.removeAllObjects { _, _, _ in completion?() }
@@ -101,36 +160,62 @@ public class Cache {
     }
     
     //  MARK: Sync
+    
     /**
-     Sync method to operate cache
+     Sync store an object for the unique key in the memory cache and disk cache
+     
+     - parameter object:     object must be implement NSCoding protocal
+     - parameter key:        unique key
+     - parameter completion: stroe completion call back
      */
     public func set(object object: NSCoding, forKey key: String) {
         memoryCache.set(object: object, forKey: key)
         diskCache.set(object: object, forKey: key)
     }
     
+    /**
+     Sync search an object according to unique key
+     search from memory cache first, if not found, will search from diskCache
+     
+     - parameter key:        object unique key
+     - parameter completion: search completion call back
+     */
     public func object(forKey key: String) -> AnyObject? {
         if let object = memoryCache.object(forKey: key) {
             return object
         }
         else {
             if let object = diskCache.object(forKey: key) {
+                memoryCache.set(object: object, forKey: key)
                 return object
             }
         }
         return nil
     }
     
+    /**
+     Sync remove object from memory cache and disk cache
+     
+     - parameter key:        object unique key
+     */
     public func removeObject(forKey key: String) {
         memoryCache.removeObject(forKey: key)
         diskCache.removeObject(forKey: key)
     }
     
+    /**
+     Sync remove all objects
+     */
     public func removeAllObjects() {
         memoryCache.removeAllObjects()
         diskCache.removeAllObjects()
     }
-    
+
+    /**
+     subscript method, sync set and get
+     
+     - parameter key: object unique key
+     */
     public subscript(key: String) -> NSCoding? {
         get {
             if let returnValue = object(forKey: key) as? NSCoding {
@@ -149,8 +234,7 @@ public class Cache {
     }
     
     //  MARK:
-    //  MARK: Pirvate
-    
+    //  MARK: Pirvate    
     private typealias OperationCompeltion = () -> Void
     
     private func asyncGroup(asyncNumber: Int,

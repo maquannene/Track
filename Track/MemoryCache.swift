@@ -6,7 +6,7 @@
 //  Copyright © 2016 马权. All rights reserved.
 //
 
-/*
+/**
     MemoryCache
  
     thread safe = concurrent + semaphore lock
@@ -24,7 +24,7 @@
 import Foundation
 import UIKit
 
-class MemoryCacheObject: LRUObjectBase {
+private class MemoryCacheObject: LRUObjectBase {
     var key: String = ""
     var cost: UInt = 0
     var time: NSTimeInterval = CACurrentMediaTime()
@@ -36,14 +36,22 @@ class MemoryCacheObject: LRUObjectBase {
     }
 }
 
-func == (lhs: MemoryCacheObject, rhs: MemoryCacheObject) -> Bool {
+private func == (lhs: MemoryCacheObject, rhs: MemoryCacheObject) -> Bool {
     return lhs.key == rhs.key
 }
 
 public typealias MemoryCacheAsyncCompletion = (cache: MemoryCache?, key: String?, object: AnyObject?) -> Void
 
+/**
+ MemoryCache is a thread safe cache implement by dispatch_semaphore_t lock and DISPATCH_QUEUE_CONCURRENT
+ Cache algorithms policy use LRU (Least Recently Used) implement by linked list and cache in NSDictionary
+ so the cache support eliminate least recently used object according count limit, cost limit and age limit
+ */
 public class MemoryCache {
     
+    /**
+     Disk cache object total count
+     */
     public var totalCount: UInt {
         get {
             lock()
@@ -53,6 +61,9 @@ public class MemoryCache {
         }
     }
     
+    /**
+     Disk cache object total cost, if not set cost when set object, total cost may be zero
+     */
     public var totalCost: UInt {
         get {
             lock()
@@ -63,6 +74,10 @@ public class MemoryCache {
     }
     
     private var _countLimit: UInt = UInt.max
+    
+    /**
+     The maximum total count limit
+     */
     public var countLimit: UInt {
         set {
             lock()
@@ -79,6 +94,10 @@ public class MemoryCache {
     }
     
     private var _costLimit: UInt = UInt.max
+    
+    /**
+     The maximum disk cost limit
+     */
     public var costLimit: UInt {
         set {
             lock()
@@ -95,6 +114,10 @@ public class MemoryCache {
     }
     
     private var _ageLimit: NSTimeInterval = DBL_MAX
+    
+    /**
+     Disk cache object age limit
+     */
     public var ageLimit: NSTimeInterval {
         set {
             lock()
@@ -118,8 +141,9 @@ public class MemoryCache {
     
     private var _shouldRemoveAllObjectWhenMemoryWarning: Bool
     
-    //  MARK: 
-    //  MARK: Public
+    /**
+     A share memory cache
+     */
     public static let shareInstance = MemoryCache()
     
     public init () {
@@ -128,8 +152,14 @@ public class MemoryCache {
     }
 
     //  MARK: Async
+    
     /**
-     Async method to operate cache
+     Async store an object for the unique key in memory cache and add object to linked list head
+     completion will be call after object has been store in disk
+     
+     - parameter object:     object
+     - parameter key:        unique key
+     - parameter completion: stroe completion call back
      */
     public func set(object object: AnyObject, forKey key: String, cost: UInt = 0, completion: MemoryCacheAsyncCompletion?) {
         dispatch_async(_queue) { [weak self] in
@@ -139,6 +169,10 @@ public class MemoryCache {
         }
     }
     
+    /**
+     Async search object according to unique key
+     if find object, object will move to linked list head
+     */
     public func object(forKey key: String, completion: MemoryCacheAsyncCompletion?) {
         dispatch_async(_queue) { [weak self] in
             guard let strongSelf = self else { completion?(cache: nil, key: key, object: nil); return }
@@ -147,6 +181,9 @@ public class MemoryCache {
         }
     }
     
+    /**
+     Async remove object according to unique key from cache dic and linked list
+     */
     public func removeObject(forKey key: String, completion: MemoryCacheAsyncCompletion?) {
         dispatch_async(_queue) { [weak self] in
             guard let strongSelf = self else { completion?(cache: nil, key: key, object: nil); return }
@@ -155,6 +192,9 @@ public class MemoryCache {
         }
     }
     
+    /**
+     Async remove all object and info from cache dic and clean linked list
+     */
     public func removeAllObjects(completion: MemoryCacheAsyncCompletion?) {
         dispatch_async(_queue) { [weak self] in
             guard let strongSelf = self else { completion?(cache: nil, key: nil, object: nil); return }
@@ -163,6 +203,11 @@ public class MemoryCache {
         }
     }
     
+    /**
+     Async trim disk cache total to countLimit according LRU
+     
+     - parameter countLimit: maximum countLimit
+     */
     public func trimToCount(countLimit: UInt, completion: MemoryCacheAsyncCompletion?) {
         dispatch_async(_queue) { [weak self] in
             guard let strongSelf = self else { completion?(cache: nil, key: nil, object: nil); return }
@@ -171,6 +216,11 @@ public class MemoryCache {
         }
     }
     
+    /**
+     Async trim disk cache totalcost to costLimit according LRU
+     
+     - parameter costLimit:  maximum costLimit
+     */
     public func trimToCost(costLimit: UInt, completion: MemoryCacheAsyncCompletion?) {
         dispatch_async(_queue) { [weak self] in
             guard let strongSelf = self else { completion?(cache: nil, key: nil, object: nil); return }
@@ -179,6 +229,11 @@ public class MemoryCache {
         }
     }
     
+    /**
+     Async trim disk cache objects which age greater than ageLimit
+     
+     - parameter costLimit:  maximum costLimit
+     */
     public func trimToAge(ageLimit: NSTimeInterval, completion: MemoryCacheAsyncCompletion?) {
         dispatch_async(_queue) { [weak self] in
             guard let strongSelf = self else { completion?(cache: nil, key: nil, object: nil); return }
@@ -189,7 +244,7 @@ public class MemoryCache {
     
     //  MARK: Sync
     /**
-     Sync method to operate cache
+     Sync store an object for the unique key in memory cache and add object to linked list head
      */
     public func set(object object: AnyObject, forKey key: String, cost: UInt = 0) {
         lock()
@@ -203,6 +258,10 @@ public class MemoryCache {
         unlock()
     }
     
+    /**
+     Async search object according to unique key
+     if find object, object will move to linked list head
+     */
     public func object(forKey key: String) -> AnyObject? {
         var object: MemoryCacheObject? = nil
         lock()
@@ -212,36 +271,58 @@ public class MemoryCache {
         return object?.value
     }
     
+    /**
+     Sync remove object according to unique key from cache dic and linked list
+     */
     public func removeObject(forKey key: String) {
         lock()
         _cache.removeObject(forKey:key)
         unlock()
     }
     
+    /**
+     Sync remove all object and info from cache dic and clean linked list
+     */
     public func removeAllObjects() {
         lock()
         _cache.removeAllObjects()
         unlock()
     }
     
+    /**
+     Sync trim disk cache totalcost to costLimit according LRU
+     */
     public func trimToCount(countLimit: UInt) {
         lock()
         _unsafeTrimToCount(countLimit)
         unlock()
     }
 
+    /**
+     Sync trim disk cache totalcost to costLimit according LRU
+     */
     public func trimToCost(costLimit: UInt) {
         lock()
         _unsafeTrimToCost(costLimit)
         unlock()
     }
 
+    /**
+     Sync trim disk cache objects which age greater than ageLimit
+     
+     - parameter costLimit:  maximum costLimit
+     */
     public func trimToAge(ageLimit: NSTimeInterval) {
         lock()
         _unsafeTrimToAge(ageLimit)
         unlock()
     }
 
+    /**
+     subscript method, sync set and get
+     
+     - parameter key: object unique key
+     */
     public subscript(key: String) -> AnyObject? {
         get {
             return object(forKey: key)
