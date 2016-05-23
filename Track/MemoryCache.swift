@@ -27,7 +27,7 @@ import UIKit
 class MemoryCacheObject: LRUObjectBase {
     var key: String = ""
     var cost: UInt = 0
-    var age: NSTimeInterval = CACurrentMediaTime()
+    var time: NSTimeInterval = CACurrentMediaTime()
     var value: AnyObject
     init(key: String, value: AnyObject, cost: UInt = 0) {
         self.key = key
@@ -66,7 +66,7 @@ public class MemoryCache {
     public var countLimit: UInt {
         set {
             lock()
-            _costLimit = newValue
+            _countLimit = newValue
             _unsafeTrimToCount(newValue)
             unlock()
         }
@@ -163,26 +163,26 @@ public class MemoryCache {
         }
     }
     
-    public func trimToCount(count: UInt, completion: MemoryCacheAsyncCompletion?) {
+    public func trimToCount(countLimit: UInt, completion: MemoryCacheAsyncCompletion?) {
         dispatch_async(_queue) { [weak self] in
             guard let strongSelf = self else { completion?(cache: nil, key: nil, object: nil); return }
-            strongSelf.trimToCount(count)
+            strongSelf.trimToCount(countLimit)
             completion?(cache: strongSelf, key: nil, object: nil)
         }
     }
     
-    public func trimToCost(cost: UInt, completion: MemoryCacheAsyncCompletion?) {
+    public func trimToCost(costLimit: UInt, completion: MemoryCacheAsyncCompletion?) {
         dispatch_async(_queue) { [weak self] in
             guard let strongSelf = self else { completion?(cache: nil, key: nil, object: nil); return }
-            strongSelf.trimToCost(cost)
+            strongSelf.trimToCost(costLimit)
             completion?(cache: strongSelf, key: nil, object: nil)
         }
     }
     
-    public func trimToAge(age: NSTimeInterval, completion: MemoryCacheAsyncCompletion?) {
+    public func trimToAge(ageLimit: NSTimeInterval, completion: MemoryCacheAsyncCompletion?) {
         dispatch_async(_queue) { [weak self] in
             guard let strongSelf = self else { completion?(cache: nil, key: nil, object: nil); return }
-            strongSelf.trimToAge(age)
+            strongSelf.trimToAge(ageLimit)
             completion?(cache: strongSelf, key: nil, object: nil)
         }
     }
@@ -207,7 +207,7 @@ public class MemoryCache {
         var object: MemoryCacheObject? = nil
         lock()
         object = _cache.object(forKey: key)
-        object?.age = CACurrentMediaTime()
+        object?.time = CACurrentMediaTime()
         unlock()
         return object?.value
     }
@@ -224,21 +224,21 @@ public class MemoryCache {
         unlock()
     }
     
-    public func trimToCount(count: UInt) {
+    public func trimToCount(countLimit: UInt) {
         lock()
-        _unsafeTrimToCount(count)
+        _unsafeTrimToCount(countLimit)
         unlock()
     }
 
-    public func trimToCost(cost: UInt) {
+    public func trimToCost(costLimit: UInt) {
         lock()
-        _unsafeTrimToCost(cost)
+        _unsafeTrimToCost(costLimit)
         unlock()
     }
 
-    public func trimToAge(age: NSTimeInterval) {
+    public func trimToAge(ageLimit: NSTimeInterval) {
         lock()
-        _unsafeTrimToAge(age)
+        _unsafeTrimToAge(ageLimit)
         unlock()
     }
 
@@ -263,46 +263,49 @@ public class MemoryCache {
         }
     }
     
-    private func _unsafeTrimToCount(count: UInt) {
-        if _cache.count <= count {
+    private func _unsafeTrimToCount(countLimit: UInt) {
+        if _cache.count <= countLimit {
             return
         }
-        if count == 0 {
+        if countLimit == 0 {
             _cache.removeAllObjects()
+            return
         }
-        var newTailObject: MemoryCacheObject? = _cache.lastObject()
-        while (newTailObject != nil && _cache.count > count) {
-            _cache.removeLastObject()
-            newTailObject = _cache.lastObject()
+        if var _: MemoryCacheObject = _cache.lastObject() {
+            while (_cache.count > countLimit) {
+                _cache.removeLastObject()
+                guard let _: MemoryCacheObject = _cache.lastObject() else { return }
+            }
         }
     }
  
-    private func _unsafeTrimToCost(cost: UInt) {
-        if _cache.cost <= cost {
+    private func _unsafeTrimToCost(costLimit: UInt) {
+        if _cache.cost <= costLimit {
             return
         }
-        if cost == 0 {
+        if costLimit == 0 {
             _cache.removeAllObjects()
             return
         }
-        var newTailObject: MemoryCacheObject? = _cache.lastObject()
-        while (newTailObject != nil && _cache.cost > cost) {
-            _cache.removeLastObject()
-            newTailObject = _cache.lastObject()
+        if var _: MemoryCacheObject = _cache.lastObject() {
+            while (_cache.cost > costLimit) {
+                _cache.removeLastObject()
+                guard let _: MemoryCacheObject = _cache.lastObject() else { return }
+            }
         }
     }
     
-    private func _unsafeTrimToAge(age: NSTimeInterval) {
-        if _ageLimit <= age {
+    private func _unsafeTrimToAge(ageLimit: NSTimeInterval) {
+        if ageLimit <= 0 {
+            _cache.removeAllObjects()
             return
         }
-        if age == 0 {
-            _cache.removeAllObjects()
-        }
-        var newTailObject: MemoryCacheObject? = _cache.lastObject()
-        while (newTailObject != nil && newTailObject?.age < age) {
-            _cache.removeLastObject()
-            newTailObject = _cache.lastObject()
+        if var lastObject: MemoryCacheObject = _cache.lastObject() {
+            while (CACurrentMediaTime() - lastObject.time > ageLimit) {
+                _cache.removeLastObject()
+                guard let newLastObject: MemoryCacheObject = _cache.lastObject() else { return }
+                lastObject = newLastObject
+            }
         }
     }
 }
