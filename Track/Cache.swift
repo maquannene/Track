@@ -1,10 +1,24 @@
+//The MIT License (MIT)
 //
-//  Cache.swift
-//  Demo
+//Copyright (c) 2016 U Are My SunShine
 //
-//  Created by 马权 on 5/17/16.
-//  Copyright © 2016 马权. All rights reserved.
+//Permission is hereby granted, free of charge, to any person obtaining a copy
+//of this software and associated documentation files (the "Software"), to deal
+//in the Software without restriction, including without limitation the rights
+//to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//copies of the Software, and to permit persons to whom the Software is
+//furnished to do so, subject to the following conditions:
 //
+//The above copyright notice and this permission notice shall be included in all
+//copies or substantial portions of the Software.
+//
+//THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//SOFTWARE.
 
 import Foundation
 
@@ -74,10 +88,12 @@ public class Cache {
     public convenience init?(name: String){
         self.init(name: name, path: NSSearchPathForDirectoriesInDomains(.CachesDirectory, .UserDomainMask, true)[0])
     }
-    
-    
+}
+
+//  MARK:
+//  MARK: Public
+public extension Cache {
     //  MARK: Async
-    
     /**
      Async store an object for the unique key in the memory cache and disk cache
      completion will be call after object has been store in memory cache and disk cache
@@ -160,7 +176,6 @@ public class Cache {
     }
     
     //  MARK: Sync
-    
     /**
      Sync store an object for the unique key in the memory cache and disk cache
      
@@ -210,7 +225,7 @@ public class Cache {
         memoryCache.removeAllObjects()
         diskCache.removeAllObjects()
     }
-
+    
     /**
      subscript method, sync set and get
      
@@ -232,9 +247,12 @@ public class Cache {
             }
         }
     }
+}
+
+//  MARK:
+//  MARK: Pirvate
+private extension Cache {
     
-    //  MARK:
-    //  MARK: Pirvate    
     private typealias OperationCompeltion = () -> Void
     
     private func asyncGroup(asyncNumber: Int,

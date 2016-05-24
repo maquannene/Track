@@ -1,10 +1,24 @@
+//The MIT License (MIT)
 //
-//  DiskCache.swift
-//  Demo
+//Copyright (c) 2016 U Are My SunShine
 //
-//  Created by 马权 on 5/17/16.
-//  Copyright © 2016 马权. All rights reserved.
+//Permission is hereby granted, free of charge, to any person obtaining a copy
+//of this software and associated documentation files (the "Software"), to deal
+//in the Software without restriction, including without limitation the rights
+//to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//copies of the Software, and to permit persons to whom the Software is
+//furnished to do so, subject to the following conditions:
 //
+//The above copyright notice and this permission notice shall be included in all
+//copies or substantial portions of the Software.
+//
+//THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//SOFTWARE.
 
 /** 
  DiskCache
@@ -195,9 +209,12 @@ public class DiskCache {
     public convenience init?(name: String) {
         self.init(name: name, path: NSSearchPathForDirectoriesInDomains(.CachesDirectory, .UserDomainMask, true)[0])
     }
-    
+}
+
+//  MARK:
+//  MARK: Public 
+public extension DiskCache {
     //  MARK: Async
-    
     /**
      Async store an object for the unique key in disk cache and store object info to linked list head
      completion will be call after object has been store in disk
@@ -288,7 +305,6 @@ public class DiskCache {
     }
     
     //  MARK: Sync
-
     /**
      Sync store an object for the unique key in disk cache and store object info to linked list head
      */
@@ -434,9 +450,12 @@ public class DiskCache {
             }
         }
     }
-    
-    //  MARK:
-    //  MARK: Private
+}
+
+//  MARK:
+//  MARK: Private
+private extension DiskCache {
+
     private func _createCacheDir() -> Bool {
         if NSFileManager.defaultManager().fileExistsAtPath(cacheURL.absoluteString) {
             return false
@@ -526,10 +545,7 @@ public class DiskCache {
             }
         }
     }
-}
-
-//  MARK: ThreadSafeProtocol
-private extension DiskCache {
+    
     func lock() {
         dispatch_semaphore_wait(_semaphoreLock, DISPATCH_TIME_FOREVER)
     }

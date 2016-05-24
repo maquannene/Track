@@ -1,10 +1,24 @@
+//The MIT License (MIT)
 //
-//  MemoryCache.swift
-//  Demo
+//Copyright (c) 2016 U Are My SunShine
 //
-//  Created by 马权 on 5/17/16.
-//  Copyright © 2016 马权. All rights reserved.
+//Permission is hereby granted, free of charge, to any person obtaining a copy
+//of this software and associated documentation files (the "Software"), to deal
+//in the Software without restriction, including without limitation the rights
+//to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//copies of the Software, and to permit persons to whom the Software is
+//furnished to do so, subject to the following conditions:
 //
+//The above copyright notice and this permission notice shall be included in all
+//copies or substantial portions of the Software.
+//
+//THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//SOFTWARE.
 
 /**
     MemoryCache
@@ -146,13 +160,20 @@ public class MemoryCache {
      */
     public static let shareInstance = MemoryCache()
     
+    /**
+     Design constructor
+     */
     public init () {
         _shouldRemoveAllObjectWhenMemoryWarning = true
         NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(MemoryCache._didReceiveMemoryWarningNotification), name: UIApplicationDidReceiveMemoryWarningNotification, object: nil)
     }
+}
 
-    //  MARK: Async
+//  MARK:
+//  MARK: Public
+public extension MemoryCache {
     
+    //  MARK: Async
     /**
      Async store an object for the unique key in memory cache and add object to linked list head
      completion will be call after object has been store in disk
@@ -297,7 +318,7 @@ public class MemoryCache {
         _unsafeTrimToCount(countLimit)
         unlock()
     }
-
+    
     /**
      Sync trim disk cache totalcost to costLimit according LRU
      */
@@ -306,7 +327,7 @@ public class MemoryCache {
         _unsafeTrimToCost(costLimit)
         unlock()
     }
-
+    
     /**
      Sync trim disk cache objects which age greater than ageLimit
      
@@ -317,7 +338,7 @@ public class MemoryCache {
         _unsafeTrimToAge(ageLimit)
         unlock()
     }
-
+    
     /**
      subscript method, sync set and get
      
@@ -335,9 +356,12 @@ public class MemoryCache {
             }
         }
     }
+}
 
-    //  MARK:
-    //  MARK: Private
+//  MARK:
+//  MARK: Private
+private extension MemoryCache {
+    
     @objc private func _didReceiveMemoryWarningNotification() {
         if _shouldRemoveAllObjectWhenMemoryWarning {
             removeAllObjects(nil)
@@ -359,7 +383,7 @@ public class MemoryCache {
             }
         }
     }
- 
+    
     private func _unsafeTrimToCost(costLimit: UInt) {
         if _cache.cost <= costLimit {
             return
@@ -389,10 +413,7 @@ public class MemoryCache {
             }
         }
     }
-}
-
-//  MARK: ThreadSafeProtocol
-private extension MemoryCache {
+    
     func lock() {
         dispatch_semaphore_wait(_semaphoreLock, DISPATCH_TIME_FOREVER)
     }
