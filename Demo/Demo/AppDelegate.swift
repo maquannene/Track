@@ -107,14 +107,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         //
         
 //          Track
-        let Tr = MemoryCache.shareInstance
+        let Tr: Cache = Cache.shareInstance
 
-//        Tr.countLimit = 3
-//        Tr.costLimit = 7
+        Tr.memoryCache.countLimit = 3
+        Tr.diskCache.countLimit = 3
 
         printTime {
             for i in 0 ... time {
-                Tr.set(object: "\(i)", forKey: "\(i)", cost: i * 2)
+                Tr.set(object: "\(i)", forKey: "\(i)")
             }
         }
 

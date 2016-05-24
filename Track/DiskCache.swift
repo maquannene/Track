@@ -59,10 +59,6 @@ private func == (lhs: DiskCacheObject, rhs: DiskCacheObject) -> Bool {
 
 public typealias DiskCacheAsyncCompletion = (cache: DiskCache?, key: String?, object: AnyObject?) -> Void
 
- private func _generateFileURL(key: String, path: NSURL) -> NSURL {
-    return path.URLByAppendingPathComponent(key)
-}
-
 /**
  DiskCache is a thread safe cache implement by dispatch_semaphore_t lock and DISPATCH_QUEUE_CONCURRENT
  Cache algorithms policy use LRU (Least Recently Used) implement by linked list,
@@ -544,6 +540,10 @@ private extension DiskCache {
                 }
             }
         }
+    }
+    
+    private func _generateFileURL(key: String, path: NSURL) -> NSURL {
+        return path.URLByAppendingPathComponent(key)
     }
     
     func lock() {

@@ -166,11 +166,11 @@ private class LinkedList<T: Equatable> {
         if count == 0 {
             return
         }
-        if node.data == headNode!.data {
+        if node.data == headNode?.data {
             headNode = node.nextNode
             headNode?.preNode = nil
         }
-        else if node.data == tailNode!.data {
+        else if node.data == tailNode?.data {
             tailNode = node.preNode
             tailNode?.nextNode = nil
         }
@@ -185,17 +185,17 @@ private class LinkedList<T: Equatable> {
         if count == 0 {
             return nil
         }
-        var node: Node<T>!
+        var node: Node<T>?
         if index < count / 2 {
             node = headNode
             for _ in 1 ... index {
-                node = node.nextNode
+                node = node?.nextNode
             }
         }
         else {
             node = tailNode
             for _ in 1 ... count - index - 1 {
-                node = node.preNode
+                node = node?.preNode
             }
         }
         return node

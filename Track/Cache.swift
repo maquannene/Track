@@ -107,8 +107,7 @@ public extension Cache {
             self.memoryCache.set(object: object, forKey: key) { _, _, _ in completion?() }
             self.diskCache.set(object: object, forKey: key) { _, _, _ in completion?() }
         }, notifyQueue: _queue) { [weak self] in
-            guard let strongSelf = self else { completion?(cache: nil, key: nil, object: nil); return }
-            completion?(cache: strongSelf, key: nil, object: nil)
+            completion?(cache: self, key: key, object: object)
         }
     }
     
@@ -125,9 +124,9 @@ public extension Cache {
             strongSelf.memoryCache.object(forKey: key) { [weak self] (memCache, memKey, memObject) in
                 guard let strongSelf = self else { return }
                 if memObject != nil {
-                    dispatch_async(strongSelf._queue, {
-                        completion?(cache: strongSelf, key: memKey, object: memObject)
-                    })
+                    dispatch_async(strongSelf._queue) { [weak self] in
+                        completion?(cache: self, key: memKey, object: memObject)
+                    }
                 }
                 else {
                     strongSelf.diskCache.object(forKey: key) { [weak self] (diskCache, diskKey, diskObject) in
@@ -135,9 +134,9 @@ public extension Cache {
                         if let diskKey = diskKey, diskCache = diskCache {
                             strongSelf.memoryCache.set(object: diskCache, forKey: diskKey, completion: nil)
                         }
-                        dispatch_async(strongSelf._queue, {
-                            completion?(cache: strongSelf, key: diskKey, object: diskObject)
-                        })
+                        dispatch_async(strongSelf._queue) { [weak self] in
+                            completion?(cache: self, key: diskKey, object: diskObject)
+                        }
                     }
                 }
             }
@@ -155,8 +154,7 @@ public extension Cache {
             self.memoryCache.removeObject(forKey: key) { _, _, _ in completion?() }
             self.diskCache.removeObject(forKey: key) { _, _, _ in completion?() }
         }, notifyQueue: _queue) { [weak self] in
-            guard let strongSelf = self else { completion?(cache: nil, key: nil, object: nil); return }
-            completion?(cache: strongSelf, key: nil, object: nil)
+            completion?(cache: self, key: key, object: nil)
         }
     }
     
@@ -170,8 +168,7 @@ public extension Cache {
             self.memoryCache.removeAllObjects { _, _, _ in completion?() }
             self.diskCache.removeAllObjects { _, _, _ in completion?() }
         }, notifyQueue: _queue) { [weak self] in
-            guard let strongSelf = self else { completion?(cache: nil, key: nil, object: nil); return }
-            completion?(cache: strongSelf, key: nil, object: nil)
+            completion?(cache: self, key: nil, object: nil)
         }
     }
     
