@@ -67,6 +67,21 @@ class LRU<T: LRUObjectBase> {
         return nil
     }
 
+    func allObjects() -> [T] {
+        var objects: [T] = [T]()
+        var indexNode: NodeType? = _linkedList.headNode
+        while (true) {
+            if let node = indexNode {
+                objects.append(node.data)
+                indexNode = node.nextNode
+            }
+            else {
+                break
+            }
+        }
+        return objects
+    }
+    
     func removeObject(forKey key: String) -> T? {
         if let node = _dic.objectForKey(key) as? NodeType {
             _dic.removeObjectForKey(node.data.key)
@@ -90,6 +105,10 @@ class LRU<T: LRUObjectBase> {
             cost -= lastNode.data.cost
             return
         }
+    }
+    
+    func firstObject() -> T? {
+        return _linkedList.headNode?.data
     }
     
     func lastObject() -> T? {

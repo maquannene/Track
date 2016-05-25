@@ -107,23 +107,30 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         //
         
 //          Track
-        let Tr: Cache = Cache.shareInstance
-
-        Tr.memoryCache.countLimit = 3
-        Tr.diskCache.countLimit = 3
+        let cache: MemoryCache = MemoryCache.shareInstance
 
         printTime {
             for i in 0 ... time {
-                Tr.set(object: "\(i)", forKey: "\(i)")
+                cache.set(object: "\(i)", forKey: "\(i)")
             }
         }
-
+        
         printTime {
             for i in 0 ... time {
                 if i < 3 {
-                    Tr.removeObject(forKey: "\(i)")
+                    cache.removeObject(forKey: "\(i)")
                 }
             }
+        }
+    
+        for i in 1 ... 10 {
+            cache.set(object: "\(i)", forKey: "\(i)")
+        }
+        
+        cache.trim(toCount: 5)
+        
+        for object in cache {
+            print(object)
         }
         return true
     }

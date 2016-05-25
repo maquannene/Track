@@ -9,7 +9,7 @@ Track is a thread safe cache write by Swift. Composed of DiskCache and MemoryCac
 
 Thread safe implement  by `dispatch_semaphore_t lock` and `DISPATCH_QUEUE_CONCURRENT`.
 
-Memory and Disk cache algorithms policy use `LRU` (Least Recently Used) implement by `linked list`. So it is fast and support eliminate least recently used object according count limit, cost limit and age limit.
+Memory and Disk cache algorithms policy use `LRU` (Least Recently Used) implement by `linked list`. So it is fast and support eliminate least recently used object according `countLimit`, `costLimit` , `ageLimit` and support `SequenceType`.
  
 ## Use
 
@@ -45,6 +45,26 @@ let memorycache = MemoryCache.shareInstance
 memorycache.trimToCost(1024 * 10)
 
 memorycache.trimToCount(10) { (cache, key, object) in }
+
+```
+Support `SequenceType` and `GeneratorType`
+
+```swift
+memoryCache.trim(toCount: 5)
+
+for i in 1 ... 10 {
+    memoryCache.set(object: "\(i)", forKey: "\(i)")
+}
+
+for object in memoryCache {
+    print(object)
+}
+
+```
+
+```ruby
+output: 10 9 8 7 6
+
 ```
 
 ## Installation
