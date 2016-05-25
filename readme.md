@@ -49,6 +49,8 @@ memorycache.trimToCount(10) { (cache, key, object) in }
 
 ## Installation
 
+**CocoaPods**
+
 ```ruby
 source 'https://github.com/CocoaPods/Specs.git'
 platform :ios, '8.0'
@@ -59,8 +61,14 @@ pod 'Track'
 
 If you want to use the latest features of Track
 
-```
+```ruby
 pod 'Track', :git => 'https://github.com/maquannene/Track.git'
+```
+
+**Carthage**
+
+```ruby
+github "maquannene/Track"
 ```
 
 ## Thanks

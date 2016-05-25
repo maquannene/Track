@@ -68,9 +68,9 @@ public class MemoryCache {
      */
     public var totalCount: UInt {
         get {
-            lock()
+            _lock()
             let count = _cache.count
-            unlock()
+            _unlock()
             return count
         }
     }
@@ -80,9 +80,9 @@ public class MemoryCache {
      */
     public var totalCost: UInt {
         get {
-            lock()
+            _lock()
             let cost = _cache.cost
-            unlock()
+            _unlock()
             return cost
         }
     }
@@ -94,15 +94,15 @@ public class MemoryCache {
      */
     public var countLimit: UInt {
         set {
-            lock()
+            _lock()
             _countLimit = newValue
-            _unsafeTrimToCount(newValue)
-            unlock()
+            _unsafeTrim(toCount: newValue)
+            _unlock()
         }
         get {
-            lock()
+            _lock()
             let countLimit = _countLimit
-            unlock()
+            _unlock()
             return countLimit
         }
     }
@@ -114,15 +114,15 @@ public class MemoryCache {
      */
     public var costLimit: UInt {
         set {
-            lock()
+            _lock()
             _costLimit = newValue
-            _unsafeTrimToCost(newValue)
-            unlock()
+            _unsafeTrim(toCost: newValue)
+            _unlock()
         }
         get {
-            lock()
+            _lock()
             let costLimit = _costLimit
-            unlock()
+            _unlock()
             return costLimit
         }
     }
@@ -134,15 +134,15 @@ public class MemoryCache {
      */
     public var ageLimit: NSTimeInterval {
         set {
-            lock()
+            _lock()
             _ageLimit = newValue
-            _unsafeTrimToAge(newValue)
-            unlock()
+            _unsafeTrim(toAge: newValue)
+            _unlock()
         }
         get {
-            lock()
+            _lock()
             let ageLimit = _ageLimit
-            unlock()
+            _unlock()
             return ageLimit
         }
     }
@@ -229,10 +229,10 @@ public extension MemoryCache {
      
      - parameter countLimit: maximum countLimit
      */
-    public func trimToCount(countLimit: UInt, completion: MemoryCacheAsyncCompletion?) {
+    public func trim(toCount countLimit: UInt, completion: MemoryCacheAsyncCompletion?) {
         dispatch_async(_queue) { [weak self] in
             guard let strongSelf = self else { completion?(cache: nil, key: nil, object: nil); return }
-            strongSelf.trimToCount(countLimit)
+            strongSelf.trim(toCount: countLimit)
             completion?(cache: strongSelf, key: nil, object: nil)
         }
     }
@@ -242,10 +242,10 @@ public extension MemoryCache {
      
      - parameter costLimit:  maximum costLimit
      */
-    public func trimToCost(costLimit: UInt, completion: MemoryCacheAsyncCompletion?) {
+    public func trim(toCost costLimit: UInt, completion: MemoryCacheAsyncCompletion?) {
         dispatch_async(_queue) { [weak self] in
             guard let strongSelf = self else { completion?(cache: nil, key: nil, object: nil); return }
-            strongSelf.trimToCost(costLimit)
+            strongSelf.trim(toCost: costLimit)
             completion?(cache: strongSelf, key: nil, object: nil)
         }
     }
@@ -255,10 +255,10 @@ public extension MemoryCache {
      
      - parameter costLimit:  maximum costLimit
      */
-    public func trimToAge(ageLimit: NSTimeInterval, completion: MemoryCacheAsyncCompletion?) {
+    public func trim(toAge ageLimit: NSTimeInterval, completion: MemoryCacheAsyncCompletion?) {
         dispatch_async(_queue) { [weak self] in
             guard let strongSelf = self else { completion?(cache: nil, key: nil, object: nil); return }
-            strongSelf.trimToAge(ageLimit)
+            strongSelf.trim(toAge: ageLimit)
             completion?(cache: strongSelf, key: nil, object: nil)
         }
     }
@@ -268,15 +268,15 @@ public extension MemoryCache {
      Sync store an object for the unique key in memory cache and add object to linked list head
      */
     public func set(object object: AnyObject, forKey key: String, cost: UInt = 0) {
-        lock()
+        _lock()
         _cache.set(object: MemoryCacheObject(key: key, value: object, cost: cost), forKey: key)
         if _cache.cost > _costLimit {
-            _unsafeTrimToCost(_costLimit)
+            _unsafeTrim(toCost: _costLimit)
         }
         if _cache.count > _countLimit {
-            _unsafeTrimToCount(_countLimit)
+            _unsafeTrim(toCount: _countLimit)
         }
-        unlock()
+        _unlock()
     }
     
     /**
@@ -285,10 +285,10 @@ public extension MemoryCache {
      */
     public func object(forKey key: String) -> AnyObject? {
         var object: MemoryCacheObject? = nil
-        lock()
+        _lock()
         object = _cache.object(forKey: key)
         object?.time = CACurrentMediaTime()
-        unlock()
+        _unlock()
         return object?.value
     }
     
@@ -296,36 +296,36 @@ public extension MemoryCache {
      Sync remove object according to unique key from cache dic and linked list
      */
     public func removeObject(forKey key: String) {
-        lock()
+        _lock()
         _cache.removeObject(forKey:key)
-        unlock()
+        _unlock()
     }
     
     /**
      Sync remove all object and info from cache dic and clean linked list
      */
     public func removeAllObjects() {
-        lock()
+        _lock()
         _cache.removeAllObjects()
-        unlock()
+        _unlock()
     }
     
     /**
      Sync trim disk cache totalcost to costLimit according LRU
      */
-    public func trimToCount(countLimit: UInt) {
-        lock()
-        _unsafeTrimToCount(countLimit)
-        unlock()
+    public func trim(toCount countLimit: UInt) {
+        _lock()
+        _unsafeTrim(toCount: countLimit)
+        _unlock()
     }
     
     /**
      Sync trim disk cache totalcost to costLimit according LRU
      */
-    public func trimToCost(costLimit: UInt) {
-        lock()
-        _unsafeTrimToCost(costLimit)
-        unlock()
+    public func trim(toCost costLimit: UInt) {
+        _lock()
+        _unsafeTrim(toCost: costLimit)
+        _unlock()
     }
     
     /**
@@ -333,10 +333,10 @@ public extension MemoryCache {
      
      - parameter costLimit:  maximum costLimit
      */
-    public func trimToAge(ageLimit: NSTimeInterval) {
-        lock()
-        _unsafeTrimToAge(ageLimit)
-        unlock()
+    public func trim(toAge ageLimit: NSTimeInterval) {
+        _lock()
+        _unsafeTrim(toAge: ageLimit)
+        _unlock()
     }
     
     /**
@@ -368,7 +368,7 @@ private extension MemoryCache {
         }
     }
     
-    private func _unsafeTrimToCount(countLimit: UInt) {
+    private func _unsafeTrim(toCount countLimit: UInt) {
         if _cache.count <= countLimit {
             return
         }
@@ -384,7 +384,7 @@ private extension MemoryCache {
         }
     }
     
-    private func _unsafeTrimToCost(costLimit: UInt) {
+    private func _unsafeTrim(toCost costLimit: UInt) {
         if _cache.cost <= costLimit {
             return
         }
@@ -400,7 +400,7 @@ private extension MemoryCache {
         }
     }
     
-    private func _unsafeTrimToAge(ageLimit: NSTimeInterval) {
+    private func _unsafeTrim(toAge ageLimit: NSTimeInterval) {
         if ageLimit <= 0 {
             _cache.removeAllObjects()
             return
@@ -414,11 +414,11 @@ private extension MemoryCache {
         }
     }
     
-    func lock() {
+    func _lock() {
         dispatch_semaphore_wait(_semaphoreLock, DISPATCH_TIME_FOREVER)
     }
     
-    func unlock() {
+    func _unlock() {
         dispatch_semaphore_signal(_semaphoreLock)
     }
 }

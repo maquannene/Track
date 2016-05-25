@@ -81,9 +81,9 @@ public class DiskCache {
      */
     public var totalCount: UInt {
         get {
-            lock()
+            _lock()
             let count = _cache.count
-            unlock()
+            _unlock()
             return count
         }
     }
@@ -93,9 +93,9 @@ public class DiskCache {
      */
     public var totalCost: UInt {
         get {
-            lock()
+            _lock()
             let cost = _cache.cost
-            unlock()
+            _unlock()
             return cost
         }
     }
@@ -107,15 +107,15 @@ public class DiskCache {
      */
     public var countLimit: UInt {
         set {
-            lock()
+            _lock()
             _countLimit = newValue
-            unlock()
-            trimToCount(newValue)
+            _unlock()
+            trim(toCount: newValue)
         }
         get {
-            lock()
+            _lock()
             let countLimit = _countLimit
-            unlock()
+            _unlock()
             return countLimit
         }
     }
@@ -127,15 +127,15 @@ public class DiskCache {
      */
     public var costLimit: UInt {
         set {
-            lock()
+            _lock()
             _costLimit = newValue
-            unlock()
-            trimToCost(newValue)
+            _unlock()
+            trim(toCost: newValue)
         }
         get {
-            lock()
+            _lock()
             let costLimit = _costLimit
-            unlock()
+            _unlock()
             return costLimit
         }
     }
@@ -147,15 +147,15 @@ public class DiskCache {
      */
     public var ageLimit: NSTimeInterval {
         set {
-            lock()
+            _lock()
             _ageLimit = newValue
-            unlock()
-            trimToAge(newValue)
+            _unlock()
+            trim(toAge: newValue)
         }
         get {
-            lock()
+            _lock()
             let ageLimit = _ageLimit
-            unlock()
+            _unlock()
             return ageLimit
         }
     }
@@ -187,11 +187,11 @@ public class DiskCache {
         self.name = name
         self.cacheURL = NSURL(string: path)!.URLByAppendingPathComponent(TrackCachePrefix + name, isDirectory: false)
         
-        lock()
+        _lock()
         dispatch_async(_queue) {
             self._createCacheDir()
             self._loadFilesInfo()
-            self.unlock()
+            self._unlock()
         }
     }
     
@@ -266,10 +266,10 @@ public extension DiskCache {
      
      - parameter countLimit: maximum countLimit
      */
-    public func trimToCount(countLimit: UInt, completion: DiskCacheAsyncCompletion?) {
+    public func trim(toCount countLimit: UInt, completion: DiskCacheAsyncCompletion?) {
         dispatch_async(_queue) { [weak self] in
             guard let strongSelf = self else { completion?(cache: nil, key: nil, object: nil); return }
-            strongSelf.trimToCount(countLimit)
+            strongSelf.trim(toCount: countLimit)
             completion?(cache: strongSelf, key: nil, object: nil)
         }
     }
@@ -279,10 +279,10 @@ public extension DiskCache {
      
      - parameter costLimit:  maximum costLimit
      */
-    public func trimToCost(costLimit: UInt, completion: DiskCacheAsyncCompletion?) {
+    public func trim(toCost costLimit: UInt, completion: DiskCacheAsyncCompletion?) {
         dispatch_async(_queue) { [weak self] in
             guard let strongSelf = self else { completion?(cache: nil, key: nil, object: nil); return }
-            strongSelf.trimToCost(costLimit)
+            strongSelf.trim(toCost: costLimit)
             completion?(cache: strongSelf, key: nil, object: nil)
         }
     }
@@ -292,10 +292,10 @@ public extension DiskCache {
      
      - parameter costLimit:  maximum costLimit
      */
-    public func trimToAge(ageLimit: NSTimeInterval, completion: DiskCacheAsyncCompletion?) {
+    public func trim(toAge ageLimit: NSTimeInterval, completion: DiskCacheAsyncCompletion?) {
         dispatch_async(_queue) { [weak self] in
             guard let strongSelf = self else { completion?(cache: nil, key: nil, object: nil); return }
-            strongSelf.trimToAge(ageLimit)
+            strongSelf.trim(toAge: ageLimit)
             completion?(cache: strongSelf, key: nil, object: nil)
         }
     }
@@ -306,7 +306,7 @@ public extension DiskCache {
      */
     public func set(object object: NSCoding, forKey key: String) {
         let fileURL = _generateFileURL(key, path: cacheURL)
-        lock()
+        _lock()
         
         if NSKeyedArchiver.archiveRootObject(object, toFile: fileURL.absoluteString) == true {
             do {
@@ -321,12 +321,12 @@ public extension DiskCache {
             } catch {}
         }
         if _cache.cost > _costLimit {
-            _unsafeTrimToCost(_costLimit)
+            _unsafeTrim(toCost: _costLimit)
         }
         if _cache.count > _countLimit {
-            _unsafeTrimToCount(_countLimit)
+            _unsafeTrim(toCount: _countLimit)
         }
-        unlock()
+        _unlock()
     }
     
     /**
@@ -336,7 +336,7 @@ public extension DiskCache {
     public func object(forKey key: String) -> AnyObject? {
         let fileURL = _generateFileURL(key, path: cacheURL)
         var object: AnyObject? = nil
-        lock()
+        _lock()
         
         let date: NSDate = NSDate()
         if NSFileManager.defaultManager().fileExistsAtPath(fileURL.absoluteString) {
@@ -352,7 +352,7 @@ public extension DiskCache {
                 
             }
         }
-        unlock()
+        _unlock()
         return object
     }
     
@@ -361,34 +361,34 @@ public extension DiskCache {
      */
     public func removeObject(forKey key: String) {
         let fileURL = _generateFileURL(key, path: cacheURL)
-        lock()
+        _lock()
         if NSFileManager.defaultManager().fileExistsAtPath(fileURL.absoluteString) {
             do {
                 try NSFileManager.defaultManager().removeItemAtPath(fileURL.absoluteString)
                 _cache.removeObject(forKey: key)
             } catch {}
         }
-        unlock()
+        _unlock()
     }
     
     /**
      Sync remove all object and info from disk and linked list
      */
     public func removeAllObjects() {
-        lock()
+        _lock()
         if NSFileManager.defaultManager().fileExistsAtPath(self.cacheURL.absoluteString) {
             do {
                 try NSFileManager.defaultManager().removeItemAtPath(self.cacheURL.absoluteString)
                 _cache.removeAllObjects()
             } catch {}
         }
-        unlock()
+        _unlock()
     }
     
     /**
      Async trim disk cache total to countLimit according LRU
      */
-    public func trimToCount(countLimit: UInt) {
+    public func trim(toCount countLimit: UInt) {
         if self.totalCount <= countLimit {
             return
         }
@@ -396,15 +396,15 @@ public extension DiskCache {
             removeAllObjects()
             return
         }
-        lock()
-        _unsafeTrimToCount(countLimit)
-        unlock()
+        _lock()
+        _unsafeTrim(toCount: countLimit)
+        _unlock()
     }
     
     /**
      Sync trim disk cache totalcost to costLimit according LRU
      */
-    public func trimToCost(costLimit: UInt) {
+    public func trim(toCost costLimit: UInt) {
         if self.totalCost <= costLimit {
             return
         }
@@ -412,22 +412,22 @@ public extension DiskCache {
             removeAllObjects()
             return
         }
-        lock()
-        _unsafeTrimToCost(costLimit)
-        unlock()
+        _lock()
+        _unsafeTrim(toCost: costLimit)
+        _unlock()
     }
     
     /**
      Sync trim disk cache objects which age greater than ageLimit
      */
-    public func trimToAge(ageLimit: NSTimeInterval) {
+    public func trim(toAge ageLimit: NSTimeInterval) {
         if ageLimit <= 0 {
             removeAllObjects()
             return
         }
-        lock()
-        _unsafeTrimToAge(ageLimit)
-        unlock()
+        _lock()
+        _unsafeTrim(toAge: ageLimit)
+        _unlock()
     }
     
     public subscript(key: String) -> NSCoding? {
@@ -494,7 +494,7 @@ private extension DiskCache {
         return true
     }
     
-    private func _unsafeTrimToCount(countLimit: UInt) {
+    private func _unsafeTrim(toCount countLimit: UInt) {
         if var lastObject: DiskCacheObject = _cache.lastObject() {
             while (_cache.count > countLimit) {
                 let fileURL = _generateFileURL(lastObject.key, path: cacheURL)
@@ -510,7 +510,7 @@ private extension DiskCache {
         }
     }
     
-    private func _unsafeTrimToCost(costLimit: UInt) {
+    private func _unsafeTrim(toCost costLimit: UInt) {
         if var lastObject: DiskCacheObject = _cache.lastObject() {
             while (_cache.cost > costLimit) {
                 let fileURL = _generateFileURL(lastObject.key, path: cacheURL)
@@ -526,7 +526,7 @@ private extension DiskCache {
         }
     }
     
-    private func _unsafeTrimToAge(ageLimit: NSTimeInterval) {
+    private func _unsafeTrim(toAge ageLimit: NSTimeInterval) {
         if var lastObject: DiskCacheObject = _cache.lastObject() {
             while (lastObject.date.timeIntervalSince1970 < NSDate().timeIntervalSince1970 - ageLimit) {
                 let fileURL = _generateFileURL(lastObject.key, path: cacheURL)
@@ -546,11 +546,11 @@ private extension DiskCache {
         return path.URLByAppendingPathComponent(key)
     }
     
-    func lock() {
+    private func _lock() {
         dispatch_semaphore_wait(_semaphoreLock, DISPATCH_TIME_FOREVER)
     }
     
-    func unlock() {
+    private func _unlock() {
         dispatch_semaphore_signal(_semaphoreLock)
     }
 }
