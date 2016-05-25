@@ -61,7 +61,31 @@ public typealias MemoryCacheAsyncCompletion = (cache: MemoryCache?, key: String?
  Cache algorithms policy use LRU (Least Recently Used) implement by linked list and cache in NSDictionary
  so the cache support eliminate least recently used object according count limit, cost limit and age limit
  */
-public class MemoryCache {
+
+public class MemoryCacheGenerator : GeneratorType {
+    
+    public typealias Element = AnyObject
+    
+    private var currentIndex:Int = 0
+    private var list:[AnyObject]?
+    
+    private init(list: [AnyObject]) {
+        self.list = list
+    }
+    
+    public func next() -> Element? {
+        guard let list = list else { return  nil }
+        if currentIndex < list.count {
+            let element = list[currentIndex]
+            currentIndex += 1
+            return element
+        }else {
+            return nil
+        }
+    }
+}
+
+public class MemoryCache: SequenceType {
     
     /**
      Disk cache object total count
@@ -166,6 +190,25 @@ public class MemoryCache {
     public init () {
         _shouldRemoveAllObjectWhenMemoryWarning = true
         NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(MemoryCache._didReceiveMemoryWarningNotification), name: UIApplicationDidReceiveMemoryWarningNotification, object: nil)
+    }
+    
+    /**
+     MemoryCacheGenerator
+     */
+    public typealias Generator = MemoryCacheGenerator
+    
+    /**
+     Returns a generator over the elements of this sequence.
+     
+     - returns: A generator
+     */
+    @warn_unused_result
+    public func generate() -> MemoryCacheGenerator {
+        var generatror: MemoryCacheGenerator
+        _lock()
+        generatror = MemoryCacheGenerator(list: _cache.allObjects().map { $0.value })
+        _unlock()
+        return generatror
     }
 }
 
@@ -283,6 +326,7 @@ public extension MemoryCache {
      Async search object according to unique key
      if find object, object will move to linked list head
      */
+    @warn_unused_result
     public func object(forKey key: String) -> AnyObject? {
         var object: MemoryCacheObject? = nil
         _lock()

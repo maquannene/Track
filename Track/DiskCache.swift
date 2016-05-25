@@ -333,6 +333,7 @@ public extension DiskCache {
      Sync search object according to unique key
      if find object, object info will move to linked list head
      */
+    @warn_unused_result
     public func object(forKey key: String) -> AnyObject? {
         let fileURL = _generateFileURL(key, path: cacheURL)
         var object: AnyObject? = nil

@@ -192,6 +192,7 @@ public extension Cache {
      - parameter key:        object unique key
      - parameter completion: search completion call back
      */
+    @warn_unused_result
     public func object(forKey key: String) -> AnyObject? {
         if let object = memoryCache.object(forKey: key) {
             return object
