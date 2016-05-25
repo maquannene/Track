@@ -103,7 +103,7 @@ public extension Cache {
      - parameter completion: stroe completion call back
      */
     public func set(object object: NSCoding, forKey key: String, completion: CacheAsyncCompletion?) {
-        asyncGroup(2, operation: { completion in
+        _asyncGroup(2, operation: { completion in
             self.memoryCache.set(object: object, forKey: key) { _, _, _ in completion?() }
             self.diskCache.set(object: object, forKey: key) { _, _, _ in completion?() }
         }, notifyQueue: _queue) { [weak self] in
@@ -150,7 +150,7 @@ public extension Cache {
      - parameter completion: remove completion call back
      */
     public func removeObject(forKey key: String, completion: CacheAsyncCompletion?) {
-        asyncGroup(2, operation: { completion in
+        _asyncGroup(2, operation: { completion in
             self.memoryCache.removeObject(forKey: key) { _, _, _ in completion?() }
             self.diskCache.removeObject(forKey: key) { _, _, _ in completion?() }
         }, notifyQueue: _queue) { [weak self] in
@@ -164,7 +164,7 @@ public extension Cache {
      - parameter completion: remove completion call back
      */
     public func removeAllObjects(completion: CacheAsyncCompletion?) {
-        asyncGroup(2, operation: { completion in
+        _asyncGroup(2, operation: { completion in
             self.memoryCache.removeAllObjects { _, _, _ in completion?() }
             self.diskCache.removeAllObjects { _, _, _ in completion?() }
         }, notifyQueue: _queue) { [weak self] in
@@ -252,10 +252,10 @@ private extension Cache {
     
     private typealias OperationCompeltion = () -> Void
     
-    private func asyncGroup(asyncNumber: Int,
-                            operation: OperationCompeltion? -> Void,
-                            notifyQueue: dispatch_queue_t,
-                            completion: (() -> Void)?) {
+    private func _asyncGroup(asyncNumber: Int,
+                             operation: OperationCompeltion? -> Void,
+                             notifyQueue: dispatch_queue_t,
+                             completion: (() -> Void)?) {
         var group: dispatch_group_t? = nil
         var operationCompletion: OperationCompeltion?
         if (completion != nil) {
@@ -277,7 +277,3 @@ private extension Cache {
         }
     }
 }
-
-
-
-
