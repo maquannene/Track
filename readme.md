@@ -1,15 +1,16 @@
-# Track
+<p align="left"><img src="http://ww4.sinaimg.cn/large/65312d9agw1f48moyot15j20du04odg6.jpg" width="300" height="90"/></p>
 
 ![Language](https://img.shields.io/badge/language-Swift%202.2-orange.svg)
 [![Pod Version](http://img.shields.io/cocoapods/v/Track.svg?style=flat)](http://cocoadocs.org/docsets/Track/)
 [![Pod Platform](http://img.shields.io/cocoapods/p/Track.svg?style=flat)](http://cocoadocs.org/docsets/Track/)
+[![Carthage Compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/Carthage/Carthage)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/maquannene/Track/blob/master/LICENSE)
 
 Track is a thread safe cache write by Swift. Composed of DiskCache and MemoryCache which support LRU.
 
 Thread safe implement  by `dispatch_semaphore_t lock` and `DISPATCH_QUEUE_CONCURRENT`.
 
-Memory and Disk cache algorithms policy use `LRU` (Least Recently Used) implement by `linked list`. So it is fast and support eliminate least recently used object according `countLimit`, `costLimit` , `ageLimit` and support `SequenceType`.
+Memory and Disk cache algorithms policy use `LRU` (Least Recently Used) implement by `linked list`. So it is fast and support eliminate least recently used object according `countLimit`, `costLimit` , `ageLimit`.
  
 ## Use
 
@@ -47,7 +48,10 @@ memorycache.trimToCost(1024 * 10)
 memorycache.trimToCount(10) { (cache, key, object) in }
 
 ```
-Support `SequenceType` and `GeneratorType`
+
+**New features**
+
+MemoryCache support thread safe `for ... in` loops by `SequenceType` and `GeneratorType`
 
 ```swift
 memoryCache.trim(toCount: 5)

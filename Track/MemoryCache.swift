@@ -57,35 +57,42 @@ private func == (lhs: MemoryCacheObject, rhs: MemoryCacheObject) -> Bool {
 public typealias MemoryCacheAsyncCompletion = (cache: MemoryCache?, key: String?, object: AnyObject?) -> Void
 
 /**
- MemoryCache is a thread safe cache implement by dispatch_semaphore_t lock and DISPATCH_QUEUE_CONCURRENT
- Cache algorithms policy use LRU (Least Recently Used) implement by linked list and cache in NSDictionary
- so the cache support eliminate least recently used object according count limit, cost limit and age limit
+ MemoryCacheGenerator, support `for`...`in` loops, it is thread safe.
  */
-
 public class MemoryCacheGenerator : GeneratorType {
     
     public typealias Element = AnyObject
     
-    private var currentIndex:Int = 0
-    private var list:[AnyObject]?
+    private var LURGenerate: LRUGenerate<MemoryCacheObject>?
     
-    private init(list: [AnyObject]) {
-        self.list = list
+    private var completion: (() -> Void)?
+    
+    private init(generate: LRUGenerate<MemoryCacheObject>?, completion: (() -> Void)?) {
+        self.LURGenerate = generate
+        self.completion = completion
     }
     
+    /**
+    Advance to the next element and return it, or `nil` if no next element exists.
+     
+     - returns: next element
+     */
     public func next() -> Element? {
-        guard let list = list else { return  nil }
-        if currentIndex < list.count {
-            let element = list[currentIndex]
-            currentIndex += 1
-            return element
-        }else {
-            return nil
-        }
+        return self.LURGenerate?.next()?.value
+    }
+    
+    deinit {
+        completion?()
     }
 }
 
-public class MemoryCache: SequenceType {
+/**
+ MemoryCache is a thread safe cache implement by dispatch_semaphore_t lock and DISPATCH_QUEUE_CONCURRENT.
+ Cache algorithms policy use LRU (Least Recently Used) implement by linked list and cache in NSDictionary,
+ so the cache support eliminate least recently used object according count limit, cost limit and age limit,
+ and support thread safe `for`...`in` loops.
+ */
+public class MemoryCache {
     
     /**
      Disk cache object total count
@@ -191,30 +198,11 @@ public class MemoryCache: SequenceType {
         _shouldRemoveAllObjectWhenMemoryWarning = true
         NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(MemoryCache._didReceiveMemoryWarningNotification), name: UIApplicationDidReceiveMemoryWarningNotification, object: nil)
     }
-    
-    /**
-     MemoryCacheGenerator
-     */
-    public typealias Generator = MemoryCacheGenerator
-    
-    /**
-     Returns a generator over the elements of this sequence.
-     
-     - returns: A generator
-     */
-    @warn_unused_result
-    public func generate() -> MemoryCacheGenerator {
-        var generatror: MemoryCacheGenerator
-        _lock()
-        generatror = MemoryCacheGenerator(list: _cache.allObjects().map { $0.value })
-        _unlock()
-        return generatror
-    }
 }
 
 //  MARK:
 //  MARK: Public
-public extension MemoryCache {
+extension MemoryCache {
     
     //  MARK: Async
     /**
@@ -399,6 +387,31 @@ public extension MemoryCache {
                 removeObject(forKey: key)
             }
         }
+    }
+}
+
+//  MARK: SequenceType
+extension MemoryCache : SequenceType {
+    /**
+     MemoryCacheGenerator
+     */
+    public typealias Generator = MemoryCacheGenerator
+    
+    /**
+     Returns a generator over the elements of this sequence.
+     It is thread safe, if you call `generate()`, remember release it,
+     otherwise maybe it lead to deadlock.
+     
+     - returns: A generator
+     */
+    @warn_unused_result
+    public func generate() -> MemoryCacheGenerator {
+        var generatror: MemoryCacheGenerator
+        _lock()
+        generatror = MemoryCacheGenerator(generate: _cache.generate()) {
+            self._unlock()
+        }
+        return generatror
     }
 }
 
