@@ -8,10 +8,16 @@
 
 Track is a thread safe cache write by Swift. Composed of DiskCache and MemoryCache which support LRU.
 
-Thread safe implement  by `dispatch_semaphore_t lock` and `DISPATCH_QUEUE_CONCURRENT`.
+## Features
 
-Memory and Disk cache algorithms policy use `LRU` (Least Recently Used) implement by `linked list`. So it is fast and support eliminate least recently used object according `countLimit`, `costLimit` , `ageLimit`.
- 
+* Thread safe: Implement by `dispatch_semaphore_t lock` and `DISPATCH_QUEUE_CONCURRENT`. Cache methods are thread safe and no deadlock.
+
+* LRU: Implement by linkedlist, it`s fast. it You can manage a cache through functions to limit size, age of entries and memory usage to eliminate least recently used object.
+
+* Async and Sync: Cache support async and sync operation.
+
+* Support subscript and for ... in.
+
 ## Use
 
 **Base use**
@@ -28,6 +34,10 @@ track.object(forKey: "key")
 track.removeObject(forKey: "key") { (cache, key, object) in }
 
 track.removeAllObjects { (cache, key, object) in }
+
+track["key"] = "object"
+
+print(track["key"])
 ```
 
 **Other use**
@@ -39,17 +49,16 @@ let diskcache = DiskCache.shareInstance
 
 diskcache.countLimit = 20
 
-diskcache.trimToAge(200)
+diskcache.costLimit = 1024 * 10
 
 let memorycache = MemoryCache.shareInstance
 
-memorycache.trimToCost(1024 * 10)
+memorycache.trim(toAge: 1000) { (cache, key, object) in }
 
-memorycache.trimToCount(10) { (cache, key, object) in }
-
+memorycache.trim(toCount: 10) { (cache, key, object) in }
 ```
 
-**New features**
+**New features: for ... in**
 
 MemoryCache support thread safe `for ... in` loops by `SequenceType` and `GeneratorType`
 
@@ -83,7 +92,7 @@ use_frameworks!
 pod 'Track'
 ```
 
-If you want to use the latest features of Track
+If you want to use the new features of Track
 
 ```ruby
 pod 'Track', :git => 'https://github.com/maquannene/Track.git'

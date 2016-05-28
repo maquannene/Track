@@ -202,7 +202,7 @@ public class MemoryCache {
 
 //  MARK:
 //  MARK: Public
-extension MemoryCache {
+public extension MemoryCache {
     
     //  MARK: Async
     /**
