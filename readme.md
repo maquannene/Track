@@ -12,11 +12,11 @@ Track is a thread safe cache write by Swift. Composed of DiskCache and MemoryCac
 
 * Thread safe: Implement by `dispatch_semaphore_t lock` and `DISPATCH_QUEUE_CONCURRENT`. Cache methods are thread safe and no deadlock.
 
-* LRU: Implement by linkedlist, it`s fast. it You can manage a cache through functions to limit size, age of entries and memory usage to eliminate least recently used object.
+* LRU: Implement by linkedlist, it`s fast. You can manage a cache through functions to limit size, age of entries and memory usage to eliminate least recently used object.
 
-* Async and Sync: Cache support async and sync operation.
+* Support async and sync operation.
 
-* Support subscript and for ... in.
+* Support subscript and for ... in loop.
 
 ## Use
 

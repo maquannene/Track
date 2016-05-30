@@ -61,8 +61,8 @@ public typealias DiskCacheAsyncCompletion = (cache: DiskCache?, key: String?, ob
 
 /**
  DiskCache is a thread safe cache implement by dispatch_semaphore_t lock and DISPATCH_QUEUE_CONCURRENT
- Cache algorithms policy use LRU (Least Recently Used) implement by linked list,
- so the cache support eliminate least recently used object according count limit, cost limit and age limit
+ Cache algorithms policy use LRU (Least Recently Used) implement by linked list.
+ You can manage cache through functions to limit size, age of entries and memory usage to eliminate least recently used object.
  */
 public class DiskCache {
     

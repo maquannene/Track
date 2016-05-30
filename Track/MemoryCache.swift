@@ -88,14 +88,14 @@ public class MemoryCacheGenerator : GeneratorType {
 
 /**
  MemoryCache is a thread safe cache implement by dispatch_semaphore_t lock and DISPATCH_QUEUE_CONCURRENT.
- Cache algorithms policy use LRU (Least Recently Used) implement by linked list and cache in NSDictionary,
- so the cache support eliminate least recently used object according count limit, cost limit and age limit,
- and support thread safe `for`...`in` loops.
+ Cache algorithms policy use LRU (Least Recently Used), implement by linked list and cache in NSDictionary.
+ You can manage cache through functions to limit size, age of entries and memory usage to eliminate least recently used object.
+ And support thread safe `for`...`in` loops.
  */
 public class MemoryCache {
     
     /**
-     Disk cache object total count
+     Memory cache object total count
      */
     public var totalCount: UInt {
         get {
@@ -107,7 +107,7 @@ public class MemoryCache {
     }
     
     /**
-     Disk cache object total cost, if not set cost when set object, total cost may be zero
+     Memory cache object total cost, if not set cost when set object, total cost may be zero
      */
     public var totalCost: UInt {
         get {
@@ -141,7 +141,7 @@ public class MemoryCache {
     private var _costLimit: UInt = UInt.max
     
     /**
-     The maximum disk cost limit
+     The maximum memory cost limit
      */
     public var costLimit: UInt {
         set {
@@ -161,7 +161,7 @@ public class MemoryCache {
     private var _ageLimit: NSTimeInterval = DBL_MAX
     
     /**
-     Disk cache object age limit
+     Memory cache object age limit
      */
     public var ageLimit: NSTimeInterval {
         set {
@@ -178,13 +178,49 @@ public class MemoryCache {
         }
     }
     
+    private var _autoRemoveAllObjectWhenMemoryWarning: Bool = true
+    
+    /**
+     Auto remove all object when memory warning
+     */
+    public var autoRemoveAllObjectWhenMemoryWarning: Bool {
+        set {
+            _lock()
+            _autoRemoveAllObjectWhenMemoryWarning = newValue
+            _unlock()
+        }
+        get {
+            _lock()
+            let autoRemoveAllObjectWhenMemoryWarning = _autoRemoveAllObjectWhenMemoryWarning
+            _unlock()
+            return autoRemoveAllObjectWhenMemoryWarning
+        }
+    }
+    
+    private var _autoRemoveAllObjectWhenEnterBackground = false
+    
+    /**
+     Auto remove all object when enter background
+     */
+    public var autoRemoveAllObjectWhenEnterBackground: Bool {
+        set {
+            _lock()
+            _autoRemoveAllObjectWhenEnterBackground = newValue
+            _unlock()
+        }
+        get {
+            _lock()
+            let autoRemoveAllObjectWhenEnterBackground = _autoRemoveAllObjectWhenEnterBackground
+            _unlock()
+            return autoRemoveAllObjectWhenEnterBackground
+        }
+    }
+    
     private let _cache: LRU = LRU<MemoryCacheObject>()
     
     private let _queue: dispatch_queue_t = dispatch_queue_create(TrackCachePrefix + String(MemoryCache), DISPATCH_QUEUE_CONCURRENT)
     
     private let _semaphoreLock: dispatch_semaphore_t = dispatch_semaphore_create(1)
-    
-    private var _shouldRemoveAllObjectWhenMemoryWarning: Bool
     
     /**
      A share memory cache
@@ -195,8 +231,8 @@ public class MemoryCache {
      Design constructor
      */
     public init () {
-        _shouldRemoveAllObjectWhenMemoryWarning = true
         NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(MemoryCache._didReceiveMemoryWarningNotification), name: UIApplicationDidReceiveMemoryWarningNotification, object: nil)
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(MemoryCache._didEnterBackgroundNotification), name: UIApplicationDidEnterBackgroundNotification, object: nil)
     }
 }
 
@@ -207,7 +243,7 @@ public extension MemoryCache {
     //  MARK: Async
     /**
      Async store an object for the unique key in memory cache and add object to linked list head
-     completion will be call after object has been store in disk
+     completion will be call after object has been store in memory
      
      - parameter object:     object
      - parameter key:        unique key
@@ -256,7 +292,7 @@ public extension MemoryCache {
     }
     
     /**
-     Async trim disk cache total to countLimit according LRU
+     Async trim memory cache total to countLimit according LRU
      
      - parameter countLimit: maximum countLimit
      */
@@ -269,7 +305,7 @@ public extension MemoryCache {
     }
     
     /**
-     Async trim disk cache totalcost to costLimit according LRU
+     Async trim memory cache totalcost to costLimit according LRU
      
      - parameter costLimit:  maximum costLimit
      */
@@ -282,7 +318,7 @@ public extension MemoryCache {
     }
     
     /**
-     Async trim disk cache objects which age greater than ageLimit
+     Async trim memory cache objects which age greater than ageLimit
      
      - parameter costLimit:  maximum costLimit
      */
@@ -343,7 +379,7 @@ public extension MemoryCache {
     }
     
     /**
-     Sync trim disk cache totalcost to costLimit according LRU
+     Sync trim memory cache totalcost to costLimit according LRU
      */
     public func trim(toCount countLimit: UInt) {
         _lock()
@@ -352,7 +388,7 @@ public extension MemoryCache {
     }
     
     /**
-     Sync trim disk cache totalcost to costLimit according LRU
+     Sync trim memory cache totalcost to costLimit according LRU
      */
     public func trim(toCost costLimit: UInt) {
         _lock()
@@ -361,7 +397,7 @@ public extension MemoryCache {
     }
     
     /**
-     Sync trim disk cache objects which age greater than ageLimit
+     Sync trim memory cache objects which age greater than ageLimit
      
      - parameter costLimit:  maximum costLimit
      */
@@ -420,7 +456,13 @@ extension MemoryCache : SequenceType {
 private extension MemoryCache {
     
     @objc private func _didReceiveMemoryWarningNotification() {
-        if _shouldRemoveAllObjectWhenMemoryWarning {
+        if self.autoRemoveAllObjectWhenMemoryWarning {
+            removeAllObjects(nil)
+        }
+    }
+    
+    @objc private func _didEnterBackgroundNotification() {
+        if self.autoRemoveAllObjectWhenEnterBackground {
             removeAllObjects(nil)
         }
     }
