@@ -1,16 +1,23 @@
-# Track
+<p align="left"><img src="http://ww4.sinaimg.cn/large/65312d9agw1f48moyot15j20du04odg6.jpg" width="300" height="90"/></p>
 
 ![Language](https://img.shields.io/badge/language-Swift%202.2-orange.svg)
 [![Pod Version](http://img.shields.io/cocoapods/v/Track.svg?style=flat)](http://cocoadocs.org/docsets/Track/)
 [![Pod Platform](http://img.shields.io/cocoapods/p/Track.svg?style=flat)](http://cocoadocs.org/docsets/Track/)
+[![Carthage Compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/Carthage/Carthage)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/maquannene/Track/blob/master/LICENSE)
 
 Track is a thread safe cache write by Swift. Composed of DiskCache and MemoryCache which support LRU.
 
-Thread safe implement  by `dispatch_semaphore_t lock` and `DISPATCH_QUEUE_CONCURRENT`.
+## Features
 
-Memory and Disk cache algorithms policy use `LRU` (Least Recently Used) implement by `linked list`. So it is fast and support eliminate least recently used object according count limit, cost limit and age limit.
- 
+* Thread safe: Implement by `dispatch_semaphore_t lock` and `DISPATCH_QUEUE_CONCURRENT`. Cache methods are thread safe and no deadlock.
+
+* LRU: Implement by linkedlist, it`s fast. You can manage a cache through functions to limit size, age of entries and memory usage to eliminate least recently used object.
+
+* Support async and sync operation.
+
+* Support subscript and for ... in loop.
+
 ## Use
 
 **Base use**
@@ -27,6 +34,10 @@ track.object(forKey: "key")
 track.removeObject(forKey: "key") { (cache, key, object) in }
 
 track.removeAllObjects { (cache, key, object) in }
+
+track["key"] = "object"
+
+print(track["key"])
 ```
 
 **Other use**
@@ -38,13 +49,35 @@ let diskcache = DiskCache.shareInstance
 
 diskcache.countLimit = 20
 
-diskcache.trimToAge(200)
+diskcache.costLimit = 1024 * 10
 
 let memorycache = MemoryCache.shareInstance
 
-memorycache.trimToCost(1024 * 10)
+memorycache.trim(toAge: 1000) { (cache, key, object) in }
 
-memorycache.trimToCount(10) { (cache, key, object) in }
+memorycache.trim(toCount: 10) { (cache, key, object) in }
+```
+
+**New features: for ... in**
+
+MemoryCache support thread safe `for ... in` loops by `SequenceType` and `GeneratorType`
+
+```swift
+memoryCache.trim(toCount: 5)
+
+for i in 1 ... 10 {
+    memoryCache.set(object: "\(i)", forKey: "\(i)")
+}
+
+for object in memoryCache {
+    print(object)
+}
+
+```
+
+```ruby
+output: 10 9 8 7 6
+
 ```
 
 ## Installation
@@ -59,7 +92,7 @@ use_frameworks!
 pod 'Track'
 ```
 
-If you want to use the latest features of Track
+If you want to use the new features of Track
 
 ```ruby
 pod 'Track', :git => 'https://github.com/maquannene/Track.git'

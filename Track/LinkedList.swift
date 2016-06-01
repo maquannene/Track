@@ -28,6 +28,27 @@ protocol LRUObjectBase: Equatable {
     var cost: UInt { get set }
 }
 
+class LRUGenerate<T: LRUObjectBase> : GeneratorType {
+    
+    typealias Element = T
+
+    private var node: Node<T>?
+    
+    private init(node: Node<T>?) {
+        self.node = node
+    }
+    
+    func next() -> Element? {
+        if let node = node {
+            self.node = node.nextNode
+            return node.data
+        }
+        else {
+            return nil
+        }
+    }
+}
+
 class LRU<T: LRUObjectBase> {
     
     private typealias NodeType = Node<T>
@@ -67,6 +88,21 @@ class LRU<T: LRUObjectBase> {
         return nil
     }
 
+    func allObjects() -> [T] {
+        var objects: [T] = [T]()
+        var indexNode: NodeType? = _linkedList.headNode
+        while (true) {
+            if let node = indexNode {
+                objects.append(node.data)
+                indexNode = node.nextNode
+            }
+            else {
+                break
+            }
+        }
+        return objects
+    }
+    
     func removeObject(forKey key: String) -> T? {
         if let node = _dic.objectForKey(key) as? NodeType {
             _dic.removeObjectForKey(node.data.key)
@@ -92,6 +128,10 @@ class LRU<T: LRUObjectBase> {
         }
     }
     
+    func firstObject() -> T? {
+        return _linkedList.headNode?.data
+    }
+    
     func lastObject() -> T? {
         return _linkedList.tailNode?.data
     }
@@ -107,6 +147,17 @@ class LRU<T: LRUObjectBase> {
                 removeObject(forKey: key)
             }
         }
+    }
+}
+
+extension LRU : SequenceType {
+    typealias Generator = LRUGenerate<T>
+    
+    @warn_unused_result
+    func generate() -> LRUGenerate<T> {
+        var generatror: LRUGenerate<T>
+        generatror = LRUGenerate(node: _linkedList.headNode)
+        return generatror
     }
 }
 
