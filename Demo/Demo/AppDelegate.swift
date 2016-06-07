@@ -26,7 +26,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         let time: UInt = 5
         
 //          Track
-        let cache: MemoryCache = MemoryCache.shareInstance
+        let memoryCache: MemoryCache = MemoryCache.shareInstance
 
 //        printTime {
 //            for i in 0 ... time {
@@ -42,19 +42,24 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 //            }
 //        }
 //    
-        for i in 1 ... 10000 {
-            cache.set(object: "\(i)", forKey: "\(i)")
+        memoryCache.countLimit = 5
+
+        for i in 1 ... 10 {
+            memoryCache.set(object: "\(i)", forKey: "\(i)")
         }
 
-        cache.trim(toCount: 5)
-        
-        for object in cache {
+        for object in memoryCache {
             print(object)
         }
-        
-//        cache.object(forKey: "\(1)", completion: { (cache, key, object) in
-//            
-//        })
+
+        memoryCache.forEach {
+            print($0)
+        }
+
+        let values = memoryCache.map { return $0 }
+
+        print(values)
+
         return true
     }
     

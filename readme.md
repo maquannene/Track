@@ -16,7 +16,7 @@ Track is a thread safe cache write by Swift. Composed of DiskCache and MemoryCac
 
 * Support async and sync operation.
 
-* Support subscript and for ... in loop.
+* MemoryCache implement `SequenceType`, support `subscrip` `for ... in` `map` `flapmap` `filter`...
 
 ## Use
 
@@ -60,10 +60,10 @@ memorycache.trim(toCount: 10) { (cache, key, object) in }
 
 **New features: for ... in**
 
-MemoryCache support thread safe `for ... in` loops by `SequenceType` and `GeneratorType`
+MemoryCache support thread safe `for ... in` `map` `forEache`
 
 ```swift
-memoryCache.trim(toCount: 5)
+memoryCache.countLimit = 5
 
 for i in 1 ... 10 {
     memoryCache.set(object: "\(i)", forKey: "\(i)")
@@ -73,10 +73,19 @@ for object in memoryCache {
     print(object)
 }
 
-```
+// output: 10 9 8 7 6
 
-```ruby
-output: 10 9 8 7 6
+memoryCache.forEach {
+    print($0)
+}
+
+// output: 6 7 8 9 10
+
+let values = memoryCache.map { return $0 }
+
+print(values)
+
+// output: [10, 9, 8, 7, 6]
 
 ```
 
@@ -103,6 +112,11 @@ pod 'Track', :git => 'https://github.com/maquannene/Track.git'
 ```ruby
 github "maquannene/Track"
 ```
+
+**Manually**
+
+1. Download and drop ```/Track``` folder in your project.  
+2. Congratulations! 
 
 ## Thanks
 
