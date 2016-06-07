@@ -33,20 +33,22 @@ class LRUGenerate<T: LRUObjectBase> : GeneratorType {
     
     typealias Element = T
 
-    private var node: Node<T>?
+    private let linkedListGenerate: LinkedListGenerate<T>?
     
-    private init(node: Node<T>?) {
-        self.node = node
+    private let lru: LRU<T>
+    
+    private init(linkedListGenerate: LinkedListGenerate<T>?, lru: LRU<T>) {
+        self.linkedListGenerate = linkedListGenerate
+        self.lru = lru
     }
     
     func next() -> Element? {
-        if let node = node {
-            self.node = node.nextNode
+        if let node = linkedListGenerate?.next() {
+            lru._linkedList.removeNode(node)
+            lru._linkedList.insertNode(node, atIndex: 0)
             return node.data
         }
-        else {
-            return nil
-        }
+        return nil
     }
 }
 
@@ -158,7 +160,7 @@ extension LRU : SequenceType {
     @warn_unused_result
     func generate() -> LRUGenerate<T> {
         var generatror: LRUGenerate<T>
-        generatror = LRUGenerate(node: _linkedList.headNode)
+        generatror = LRUGenerate(linkedListGenerate: _linkedList.generate(), lru: self)
         return generatror
     }
 }
@@ -171,6 +173,27 @@ private class Node<T: Equatable> {
     
     init(data: T) {
         self.data = data
+    }
+}
+
+private class LinkedListGenerate<T: Equatable> : GeneratorType {
+    
+    typealias Element = Node<T>
+    
+    var node: Node<T>?
+    
+    init(node: Node<T>?) {
+        self.node = node
+    }
+    
+    func next() -> Element? {
+        if let node = self.node {
+            self.node = node.nextNode
+            return node
+        }
+        else {
+            return nil
+        }
     }
 }
 
@@ -259,5 +282,17 @@ private class LinkedList<T: Equatable> {
         headNode = nil
         tailNode = nil
         count = 0
+    }
+}
+
+extension LinkedList : SequenceType {
+    
+    private typealias Generator = LinkedListGenerate<T>
+    
+    @warn_unused_result
+    private func generate() -> LinkedListGenerate<T> {
+        var generatror: LinkedListGenerate<T>
+        generatror = LinkedListGenerate(node: headNode)
+        return generatror
     }
 }

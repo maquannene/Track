@@ -65,12 +65,12 @@ public class MemoryCacheGenerator : GeneratorType {
     
     public typealias Element = AnyObject
     
-    private var LURGenerate: LRUGenerate<MemoryCacheObject>?
+    private var lruGenerate: LRUGenerate<MemoryCacheObject>?
     
     private var completion: (() -> Void)?
     
-    private init(generate: LRUGenerate<MemoryCacheObject>?, completion: (() -> Void)?) {
-        self.LURGenerate = generate
+    private init(generate: LRUGenerate<MemoryCacheObject>?, cache: MemoryCache, completion: (() -> Void)?) {
+        self.lruGenerate = generate
         self.completion = completion
     }
     
@@ -80,7 +80,7 @@ public class MemoryCacheGenerator : GeneratorType {
      - returns: next element
      */
     public func next() -> Element? {
-        return self.LURGenerate?.next()?.value
+        return self.lruGenerate?.next()?.value
     }
     
     deinit {
@@ -446,7 +446,7 @@ extension MemoryCache : SequenceType {
     public func generate() -> MemoryCacheGenerator {
         var generatror: MemoryCacheGenerator
         _lock()
-        generatror = MemoryCacheGenerator(generate: _cache.generate()) {
+        generatror = MemoryCacheGenerator(generate: _cache.generate(), cache: self) {
             self._unlock()
         }
         return generatror
@@ -480,7 +480,7 @@ private extension MemoryCache {
         if let _: MemoryCacheObject = _cache.lastObject() {
             while (_cache.count > countLimit) {
                 _cache.removeLastObject()
-                guard let _: MemoryCacheObject = _cache.lastObject() else { return }
+                guard let _: MemoryCacheObject = _cache.lastObject() else { break }
             }
         }
     }
@@ -496,7 +496,7 @@ private extension MemoryCache {
         if let _: MemoryCacheObject = _cache.lastObject() {
             while (_cache.cost > costLimit) {
                 _cache.removeLastObject()
-                guard let _: MemoryCacheObject = _cache.lastObject() else { return }
+                guard let _: MemoryCacheObject = _cache.lastObject() else { break }
             }
         }
     }
@@ -509,7 +509,7 @@ private extension MemoryCache {
         if var lastObject: MemoryCacheObject = _cache.lastObject() {
             while (CACurrentMediaTime() - lastObject.time > ageLimit) {
                 _cache.removeLastObject()
-                guard let newLastObject: MemoryCacheObject = _cache.lastObject() else { return }
+                guard let newLastObject: MemoryCacheObject = _cache.lastObject() else { break }
                 lastObject = newLastObject
             }
         }
