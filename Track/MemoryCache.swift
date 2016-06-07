@@ -38,7 +38,7 @@
 import Foundation
 import UIKit
 
-private class MemoryCacheObject: LRUObjectBase {
+private class MemoryCacheObject: LRUObject {
 
     var key: String = ""
     var cost: UInt = 0
@@ -63,7 +63,7 @@ public typealias MemoryCacheAsyncCompletion = (cache: MemoryCache?, key: String?
  */
 public class MemoryCacheGenerator : GeneratorType {
     
-    public typealias Element = AnyObject
+    public typealias Element = (String, AnyObject)
     
     private var lruGenerate: LRUGenerate<MemoryCacheObject>?
     
@@ -80,7 +80,10 @@ public class MemoryCacheGenerator : GeneratorType {
      - returns: next element
      */
     public func next() -> Element? {
-        return self.lruGenerate?.next()?.value
+        if let object = lruGenerate?.next() {
+            return (object.key, object.value)
+        }
+        return nil
     }
     
     deinit {

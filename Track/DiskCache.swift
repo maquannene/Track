@@ -37,7 +37,7 @@
 import Foundation
 import QuartzCore
 
-private class DiskCacheObject: LRUObjectBase {
+private class DiskCacheObject: LRUObject {
     
     var key: String = ""
     var cost: UInt = 0

@@ -23,13 +23,13 @@
 import Foundation
 import QuartzCore
 
-protocol LRUObjectBase: Equatable {
+protocol LRUObject: Equatable {
     
     var key: String { get }
     var cost: UInt { get set }
 }
 
-class LRUGenerate<T: LRUObjectBase> : GeneratorType {
+class LRUGenerate<T: LRUObject> : GeneratorType {
     
     typealias Element = T
 
@@ -52,7 +52,7 @@ class LRUGenerate<T: LRUObjectBase> : GeneratorType {
     }
 }
 
-class LRU<T: LRUObjectBase> {
+class LRU<T: LRUObject> {
     
     private typealias NodeType = Node<T>
     
