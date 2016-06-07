@@ -104,6 +104,11 @@ pod 'Track', :git => 'https://github.com/maquannene/Track.git'
 github "maquannene/Track"
 ```
 
+**Manually**
+
+1. Download and drop ```/Track``` folder in your project.  
+2. Congratulations! 
+
 ## Thanks
 
 Thanks YYCache，PINCache very much. Some ideas from them.
