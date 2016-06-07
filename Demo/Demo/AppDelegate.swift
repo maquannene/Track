@@ -25,103 +25,22 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
         let time: UInt = 5
         
-        //        let dd = NSMutableDictionary()
-        //        printTime {
-        //            for i in 0 ... time {
-        //                dd["\(i * 2)"] = "\(i)"
-        //            }
-        //        }
-        //
-        //        printTime {
-        //            for i in 0 ... time {
-        //                if i % 2 == 0 {
-        //                    let x = dd["\(i)"]
-        //                }
-        //            }
-        //        }
-        //
-        //        printTime {
-        //            for i in 0 ... time0 {
-        //                let x = dd["\(i)"]
-        //            }
-        //        }
-        //
-        //        printTime {
-        //            for i in 0 ... time0 {
-        //                let x = dic["\(i)"]
-        //            }
-        //        }
-        
-        //  TM
-        //        let t = TMMemoryCache.sharedCache()
-        //
-        //        printTime {
-        //            for i in 0 ... time {
-        //                //            print(" i = \(i)")
-        //                t.setObject("sfdsf", forKey: "\(i)")
-        //            }
-        //        }
-        //
-        //        printTime {
-        //            for i in 0 ... time {
-        //                if i % 2 == 0 {
-        //                    t.objectForKey("\(i)")
-        //                }
-        //            }
-        //        }
-        
-        //        //  PIN
-        //        let p = PINMemoryCache.sharedCache()
-        //
-        //        printTime {
-        //            for i in 0 ... time {
-        //                //            print(" p = \(i)")
-        //                p.setObject("\(i * 2)", forKey: "\(i)")
-        //            }
-        //        }
-        //
-        //        printTime {
-        //            for i in 0 ... time {
-        //                if i % 2 == 0 {
-        //                    p.objectForKey("\(i)")
-        //                }
-        //            }
-        //        }
-        
-        //        //  YY
-        //        let yy = YYMemoryCache()
-        //
-        //        printTime {
-        //            for i in 0 ... time {
-        //                yy.setObject("\(i * 2)", forKey: "\(i)")
-        //            }
-        //        }
-        //
-        //        printTime {
-        //            for i in 0 ... time {
-        //                if i % 2 == 0 {
-        //                    yy.objectForKey("\(i)")
-        //                }
-        //            }
-        //        }
-        //
-        
 //          Track
         let cache: MemoryCache = MemoryCache.shareInstance
 
-//        printTime {
-//            for i in 0 ... time {
-//                cache.set(object: "\(i)", forKey: "\(i)")
-//            }
-//        }
-//        
-//        printTime {
-//            for i in 0 ... time {
-//                if i < 3 {
-//                    cache.removeObject(forKey: "\(i)")
-//                }
-//            }
-//        }
+        printTime {
+            for i in 0 ... time {
+                cache.set(object: "\(i)", forKey: "\(i)")
+            }
+        }
+        
+        printTime {
+            for i in 0 ... time {
+                if i < 3 {
+                    cache.removeObject(forKey: "\(i)")
+                }
+            }
+        }
     
         for i in 1 ... 10000 {
             cache.set(object: "\(i)", forKey: "\(i)")
