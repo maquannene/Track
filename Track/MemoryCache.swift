@@ -59,19 +59,19 @@ private func == (lhs: MemoryCacheObject, rhs: MemoryCacheObject) -> Bool {
 public typealias MemoryCacheAsyncCompletion = (cache: MemoryCache?, key: String?, object: AnyObject?) -> Void
 
 /**
- MemoryCacheGenerator, support `for`...`in` loops, it is thread safe.
+ MemoryCacheGenerator, support `for...in` loops, it is thread safe.
  */
 public class MemoryCacheGenerator : GeneratorType {
     
     public typealias Element = (String, AnyObject)
     
-    private var lruGenerate: LRUGenerate<MemoryCacheObject>?
+    private var _lruGenerator: LRUGenerator<MemoryCacheObject>
     
-    private var completion: (() -> Void)?
+    private var _completion: (() -> Void)?
     
-    private init(generate: LRUGenerate<MemoryCacheObject>?, cache: MemoryCache, completion: (() -> Void)?) {
-        self.lruGenerate = generate
-        self.completion = completion
+    private init(generate: LRUGenerator<MemoryCacheObject>, cache: MemoryCache, completion: (() -> Void)?) {
+        self._lruGenerator = generate
+        self._completion = completion
     }
     
     /**
@@ -80,14 +80,14 @@ public class MemoryCacheGenerator : GeneratorType {
      - returns: next element
      */
     public func next() -> Element? {
-        if let object = lruGenerate?.next() {
+        if let object = _lruGenerator.next() {
             return (object.key, object.value)
         }
         return nil
     }
     
     deinit {
-        completion?()
+        _completion?()
     }
 }
 
@@ -95,7 +95,7 @@ public class MemoryCacheGenerator : GeneratorType {
  MemoryCache is a thread safe cache implement by dispatch_semaphore_t lock and DISPATCH_QUEUE_CONCURRENT.
  Cache algorithms policy use LRU (Least Recently Used), implement by linked list and cache in NSDictionary.
  You can manage cache through functions to limit size, age of entries and memory usage to eliminate least recently used object.
- And support thread safe `for`...`in` loops.
+ And support thread safe `for`...`in` loops, map, forEach...
  */
 public class MemoryCache {
     

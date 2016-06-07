@@ -61,9 +61,48 @@ private func == (lhs: DiskCacheObject, rhs: DiskCacheObject) -> Bool {
 public typealias DiskCacheAsyncCompletion = (cache: DiskCache?, key: String?, object: AnyObject?) -> Void
 
 /**
+ DiskCacheGenerator, support `for...in` loops, it is thread safe.
+ */
+public class DiskCacheGenerator : GeneratorType {
+    
+    public typealias Element = (String, AnyObject)
+    
+    private var _lruGenerator: LRUGenerator<DiskCacheObject>
+    
+    private var _diskCache: DiskCache
+    
+    private var _completion: (() -> Void)?
+    
+    private init(generate: LRUGenerator<DiskCacheObject>, diskCache: DiskCache, completion: (() -> Void)?) {
+        self._lruGenerator = generate
+        self._diskCache = diskCache
+        self._completion = completion
+    }
+    
+    /**
+     Advance to the next element and return it, or `nil` if no next element exists.
+     
+     - returns: next element
+     */
+    public func next() -> Element? {
+        if let key = _lruGenerator.next()?.key {
+            if  let value = _diskCache._unsafeObject(forKey: key) {
+                return (key, value)
+            }
+        }
+        return nil
+    }
+    
+    deinit {
+        _completion?()
+    }
+}
+
+/**
  DiskCache is a thread safe cache implement by dispatch_semaphore_t lock and DISPATCH_QUEUE_CONCURRENT
  Cache algorithms policy use LRU (Least Recently Used) implement by linked list.
  You can manage cache through functions to limit size, age of entries and memory usage to eliminate least recently used object.
+ And support thread safe `for`...`in` loops, map, forEach...
  */
 public class DiskCache {
     
@@ -336,24 +375,8 @@ public extension DiskCache {
      */
     @warn_unused_result
     public func object(forKey key: String) -> AnyObject? {
-        let fileURL = _generateFileURL(key, path: cacheURL)
-        var object: AnyObject? = nil
         _lock()
-        
-        let date: NSDate = NSDate()
-        if NSFileManager.defaultManager().fileExistsAtPath(fileURL.absoluteString) {
-            object = NSKeyedUnarchiver.unarchiveObjectWithFile(fileURL.absoluteString)
-            do {
-                try NSFileManager.defaultManager().setAttributes([NSFileModificationDate : date], ofItemAtPath: fileURL.path!)
-                if object != nil {
-                    if let diskCacheObj = _cache.object(forKey: key) {
-                        diskCacheObj.date = date
-                    }
-                }
-            } catch {
-                
-            }
-        }
+        let object = _unsafeObject(forKey: key)
         _unlock()
         return object
     }
@@ -450,6 +473,31 @@ public extension DiskCache {
     }
 }
 
+//  MARK: SequenceType
+extension DiskCache : SequenceType {
+    /**
+     MemoryCacheGenerator
+     */
+    public typealias Generator = DiskCacheGenerator
+    
+    /**
+     Returns a generator over the elements of this sequence.
+     It is thread safe, if you call `generate()`, remember release it,
+     otherwise maybe it lead to deadlock.
+     
+     - returns: A generator
+     */
+    @warn_unused_result
+    public func generate() -> DiskCacheGenerator {
+        var generatror: DiskCacheGenerator
+        _lock()
+        generatror = DiskCacheGenerator(generate: _cache.generate(), diskCache: self) {
+            self._unlock()
+        }
+        return generatror
+    }
+}
+
 //  MARK:
 //  MARK: Private
 private extension DiskCache {
@@ -542,6 +590,26 @@ private extension DiskCache {
                 }
             }
         }
+    }
+    
+    private func _unsafeObject(forKey key: String) -> AnyObject? {
+        let fileURL = _generateFileURL(key, path: cacheURL)
+        var object: AnyObject? = nil
+        let date: NSDate = NSDate()
+        if NSFileManager.defaultManager().fileExistsAtPath(fileURL.absoluteString) {
+            object = NSKeyedUnarchiver.unarchiveObjectWithFile(fileURL.absoluteString)
+            do {
+                try NSFileManager.defaultManager().setAttributes([NSFileModificationDate : date], ofItemAtPath: fileURL.path!)
+                if object != nil {
+                    if let diskCacheObj = _cache.object(forKey: key) {
+                        diskCacheObj.date = date
+                    }
+                }
+            } catch {
+                
+            }
+        }
+        return object
     }
     
     private func _generateFileURL(key: String, path: NSURL) -> NSURL {

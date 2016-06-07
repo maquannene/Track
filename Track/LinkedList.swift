@@ -29,21 +29,21 @@ protocol LRUObject: Equatable {
     var cost: UInt { get set }
 }
 
-class LRUGenerate<T: LRUObject> : GeneratorType {
+class LRUGenerator<T: LRUObject> : GeneratorType {
     
     typealias Element = T
 
-    private let linkedListGenerate: LinkedListGenerate<T>?
+    private let linkedListGenerator: LinkedListGenerator<T>
     
     private let lru: LRU<T>
     
-    private init(linkedListGenerate: LinkedListGenerate<T>?, lru: LRU<T>) {
-        self.linkedListGenerate = linkedListGenerate
+    private init(linkedListGenerator: LinkedListGenerator<T>, lru: LRU<T>) {
+        self.linkedListGenerator = linkedListGenerator
         self.lru = lru
     }
     
     func next() -> Element? {
-        if let node = linkedListGenerate?.next() {
+        if let node = linkedListGenerator.next() {
             lru._linkedList.removeNode(node)
             lru._linkedList.insertNode(node, atIndex: 0)
             return node.data
@@ -155,12 +155,12 @@ class LRU<T: LRUObject> {
 
 extension LRU : SequenceType {
     
-    typealias Generator = LRUGenerate<T>
+    typealias Generator = LRUGenerator<T>
     
     @warn_unused_result
-    func generate() -> LRUGenerate<T> {
-        var generatror: LRUGenerate<T>
-        generatror = LRUGenerate(linkedListGenerate: _linkedList.generate(), lru: self)
+    func generate() -> LRUGenerator<T> {
+        var generatror: LRUGenerator<T>
+        generatror = LRUGenerator(linkedListGenerator: _linkedList.generate(), lru: self)
         return generatror
     }
 }
@@ -176,7 +176,7 @@ private class Node<T: Equatable> {
     }
 }
 
-private class LinkedListGenerate<T: Equatable> : GeneratorType {
+private class LinkedListGenerator<T: Equatable> : GeneratorType {
     
     typealias Element = Node<T>
     
@@ -287,12 +287,12 @@ private class LinkedList<T: Equatable> {
 
 extension LinkedList : SequenceType {
     
-    private typealias Generator = LinkedListGenerate<T>
+    private typealias Generator = LinkedListGenerator<T>
     
     @warn_unused_result
-    private func generate() -> LinkedListGenerate<T> {
-        var generatror: LinkedListGenerate<T>
-        generatror = LinkedListGenerate(node: headNode)
+    private func generate() -> LinkedListGenerator<T> {
+        var generatror: LinkedListGenerator<T>
+        generatror = LinkedListGenerator(node: headNode)
         return generatror
     }
 }
