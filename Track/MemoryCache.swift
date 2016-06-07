@@ -69,7 +69,7 @@ public class MemoryCacheGenerator : GeneratorType {
     
     private var completion: (() -> Void)?
     
-    private init(generate: LRUGenerate<MemoryCacheObject>?, completion: (() -> Void)?) {
+    private init(generate: LRUGenerate<MemoryCacheObject>?, cache: MemoryCache, completion: (() -> Void)?) {
         self.LURGenerate = generate
         self.completion = completion
     }
@@ -446,7 +446,7 @@ extension MemoryCache : SequenceType {
     public func generate() -> MemoryCacheGenerator {
         var generatror: MemoryCacheGenerator
         _lock()
-        generatror = MemoryCacheGenerator(generate: _cache.generate()) {
+        generatror = MemoryCacheGenerator(generate: _cache.generate(), cache: self) {
             self._unlock()
         }
         return generatror

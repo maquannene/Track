@@ -28,20 +28,20 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 //          Track
         let cache: MemoryCache = MemoryCache.shareInstance
 
-        printTime {
-            for i in 0 ... time {
-                cache.set(object: "\(i)", forKey: "\(i)")
-            }
-        }
-        
-        printTime {
-            for i in 0 ... time {
-                if i < 3 {
-                    cache.removeObject(forKey: "\(i)")
-                }
-            }
-        }
-    
+//        printTime {
+//            for i in 0 ... time {
+//                cache.set(object: "\(i)", forKey: "\(i)")
+//            }
+//        }
+//        
+//        printTime {
+//            for i in 0 ... time {
+//                if i < 3 {
+//                    cache.removeObject(forKey: "\(i)")
+//                }
+//            }
+//        }
+//    
         for i in 1 ... 10000 {
             cache.set(object: "\(i)", forKey: "\(i)")
         }
@@ -52,9 +52,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             print(object)
         }
         
-        cache.object(forKey: "\(1)", completion: { (cache, key, object) in
-            
-        })
+//        cache.object(forKey: "\(1)", completion: { (cache, key, object) in
+//            
+//        })
         return true
     }
     
