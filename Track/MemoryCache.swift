@@ -39,10 +39,12 @@ import Foundation
 import UIKit
 
 private class MemoryCacheObject: LRUObjectBase {
+
     var key: String = ""
     var cost: UInt = 0
     var time: NSTimeInterval = CACurrentMediaTime()
     var value: AnyObject
+    
     init(key: String, value: AnyObject, cost: UInt = 0) {
         self.key = key
         self.value = value
@@ -475,7 +477,7 @@ private extension MemoryCache {
             _cache.removeAllObjects()
             return
         }
-        if var _: MemoryCacheObject = _cache.lastObject() {
+        if let _: MemoryCacheObject = _cache.lastObject() {
             while (_cache.count > countLimit) {
                 _cache.removeLastObject()
                 guard let _: MemoryCacheObject = _cache.lastObject() else { return }
@@ -491,7 +493,7 @@ private extension MemoryCache {
             _cache.removeAllObjects()
             return
         }
-        if var _: MemoryCacheObject = _cache.lastObject() {
+        if let _: MemoryCacheObject = _cache.lastObject() {
             while (_cache.cost > costLimit) {
                 _cache.removeLastObject()
                 guard let _: MemoryCacheObject = _cache.lastObject() else { return }

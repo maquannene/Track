@@ -24,6 +24,7 @@ import Foundation
 import QuartzCore
 
 protocol LRUObjectBase: Equatable {
+    
     var key: String { get }
     var cost: UInt { get set }
 }
@@ -151,6 +152,7 @@ class LRU<T: LRUObjectBase> {
 }
 
 extension LRU : SequenceType {
+    
     typealias Generator = LRUGenerate<T>
     
     @warn_unused_result
@@ -162,6 +164,7 @@ extension LRU : SequenceType {
 }
 
 private class Node<T: Equatable> {
+    
     weak var preNode: Node?
     weak var nextNode: Node?
     var data: T

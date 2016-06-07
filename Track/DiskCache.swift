@@ -38,6 +38,7 @@ import Foundation
 import QuartzCore
 
 private class DiskCacheObject: LRUObjectBase {
+    
     var key: String = ""
     var cost: UInt = 0
     var date: NSDate = NSDate()
