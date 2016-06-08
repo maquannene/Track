@@ -37,33 +37,22 @@
 import Foundation
 import QuartzCore
 
-private class DiskCacheObject: LRUObject {
+/**
+ *  FastGeneratorType, inherit GeneratorType and provide a method to shift offset.
+ */
+public protocol FastGeneratorType: GeneratorType {
     
-    var key: String = ""
-    var cost: UInt = 0
-    var date: NSDate = NSDate()
-
-    init (key: String, cost: UInt = 0, date: NSDate) {
-        self.key = key
-        self.cost = cost
-        self.date = date
-    }
-    
-    convenience init (key: String, cost: UInt = 0) {
-        self.init(key: key, cost: cost, date: NSDate())
-    }
+    /**
+     Shift like next, but there is no return value.
+     If you just shift offset, it`s implementation should fast than `next()`
+     */
+    func shift()
 }
-
-private func == (lhs: DiskCacheObject, rhs: DiskCacheObject) -> Bool {
-    return lhs.key == rhs.key
-}
-
-public typealias DiskCacheAsyncCompletion = (cache: DiskCache?, key: String?, object: AnyObject?) -> Void
 
 /**
- DiskCacheGenerator, support `for...in` loops, it is thread safe.
+ DiskCacheGenerator, support `for...in` `map` `forEach`..., it is thread safe.
  */
-public class DiskCacheGenerator : GeneratorType {
+public class DiskCacheGenerator : FastGeneratorType {
     
     public typealias Element = (String, AnyObject)
     
@@ -84,6 +73,7 @@ public class DiskCacheGenerator : GeneratorType {
      
      - returns: next element
      */
+    @warn_unused_result
     public func next() -> Element? {
         if let key = _lruGenerator.next()?.key {
             if  let value = _diskCache._unsafeObject(forKey: key) {
@@ -93,10 +83,40 @@ public class DiskCacheGenerator : GeneratorType {
         return nil
     }
     
+    /**
+     Shift like next, but there is no return value and shift fast.
+     */
+    public func shift() {
+        let _ = _lruGenerator.shift()
+    }
+    
     deinit {
         _completion?()
     }
 }
+
+private class DiskCacheObject: LRUObject {
+    
+    var key: String = ""
+    var cost: UInt = 0
+    var date: NSDate = NSDate()
+    
+    init (key: String, cost: UInt = 0, date: NSDate) {
+        self.key = key
+        self.cost = cost
+        self.date = date
+    }
+    
+    convenience init (key: String, cost: UInt = 0) {
+        self.init(key: key, cost: cost, date: NSDate())
+    }
+}
+
+private func == (lhs: DiskCacheObject, rhs: DiskCacheObject) -> Bool {
+    return lhs.key == rhs.key
+}
+
+public typealias DiskCacheAsyncCompletion = (cache: DiskCache?, key: String?, object: AnyObject?) -> Void
 
 /**
  DiskCache is a thread safe cache implement by dispatch_semaphore_t lock and DISPATCH_QUEUE_CONCURRENT

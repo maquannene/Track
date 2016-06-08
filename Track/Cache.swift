@@ -23,6 +23,50 @@
 import Foundation
 
 /**
+ CacheGenerator, support `for...in` loops, it is thread safe.
+ */
+public class CacheGenerator : GeneratorType {
+    
+    public typealias Element = (String, AnyObject)
+    
+    private var _memoryCacheGenerator: MemoryCacheGenerator
+    
+    private var _diskCacheGenerator: DiskCacheGenerator
+    
+    private var _memoryCache: MemoryCache
+    
+    private let _queue: dispatch_queue_t = dispatch_queue_create("xxxx", DISPATCH_QUEUE_SERIAL)
+    
+    private let _semaphoreLock: dispatch_semaphore_t = dispatch_semaphore_create(1)
+    
+    private init(memoryCacheGenerator: MemoryCacheGenerator, diskCacheGenerator: DiskCacheGenerator, memoryCache: MemoryCache) {
+        self._memoryCacheGenerator = memoryCacheGenerator
+        self._diskCacheGenerator = diskCacheGenerator
+        self._memoryCache = memoryCache
+    }
+    
+    /**
+     Advance to the next element and return it, or `nil` if no next element exists.
+     
+     - returns: next element
+     */
+    @warn_unused_result
+    public func next() -> Element? {
+        if let element = _memoryCacheGenerator.next() {
+            self._diskCacheGenerator.shift()
+            return element
+        }
+        else {
+            if let element: Element = _diskCacheGenerator.next() {
+                _memoryCache._unsafeSet(object: element.1, forKey: element.0)
+                return element
+            }
+        }
+        return nil
+    }
+}
+
+/**
  Cache async operation callback
  */
 public typealias CacheAsyncCompletion = (cache: Cache?, key: String?, object: AnyObject?) -> Void
@@ -38,7 +82,8 @@ let TrackCachePrefix: String = "com.trackcache."
 let TrackCacheDefauleName: String = "defauleTrackCache"
 
 /**
- TrackCache is a thread safe cache, contain a thread safe memory cache and a thread safe diskcache
+ TrackCache is a thread safe cache, contain a thread safe memory cache and a thread safe diskcache.
+ And support thread safe `for`...`in` loops, map, forEach...
  */
 public class Cache {
     
@@ -244,6 +289,28 @@ public extension Cache {
                 removeObject(forKey: key)
             }
         }
+    }
+}
+
+//  MARK: SequenceType
+extension Cache : SequenceType {
+    /**
+     CacheGenerator
+     */
+    public typealias Generator = CacheGenerator
+    
+    /**
+     Returns a generator over the elements of this sequence.
+     It is thread safe, if you call `generate()`, remember release it,
+     otherwise maybe it lead to deadlock.
+     
+     - returns: A generator
+     */
+    @warn_unused_result
+    public func generate() -> CacheGenerator {
+        var generatror: CacheGenerator
+        generatror = CacheGenerator(memoryCacheGenerator: memoryCache.generate(), diskCacheGenerator: diskCache.generate(), memoryCache: memoryCache)
+        return generatror
     }
 }
 

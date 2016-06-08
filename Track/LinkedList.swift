@@ -29,7 +29,7 @@ protocol LRUObject: Equatable {
     var cost: UInt { get set }
 }
 
-class LRUGenerator<T: LRUObject> : GeneratorType {
+class LRUGenerator<T: LRUObject> : FastGeneratorType {
     
     typealias Element = T
 
@@ -42,6 +42,7 @@ class LRUGenerator<T: LRUObject> : GeneratorType {
         self.lru = lru
     }
     
+    @warn_unused_result
     func next() -> Element? {
         if let node = linkedListGenerator.next() {
             lru._linkedList.removeNode(node)
@@ -49,6 +50,13 @@ class LRUGenerator<T: LRUObject> : GeneratorType {
             return node.data
         }
         return nil
+    }
+    
+    func shift() {
+        if let node = linkedListGenerator.next() {
+            lru._linkedList.removeNode(node)
+            lru._linkedList.insertNode(node, atIndex: 0)
+        }
     }
 }
 
@@ -176,7 +184,7 @@ private class Node<T: Equatable> {
     }
 }
 
-private class LinkedListGenerator<T: Equatable> : GeneratorType {
+private class LinkedListGenerator<T: Equatable> : FastGeneratorType {
     
     typealias Element = Node<T>
     
@@ -186,6 +194,7 @@ private class LinkedListGenerator<T: Equatable> : GeneratorType {
         self.node = node
     }
     
+    @warn_unused_result
     func next() -> Element? {
         if let node = self.node {
             self.node = node.nextNode
@@ -194,6 +203,10 @@ private class LinkedListGenerator<T: Equatable> : GeneratorType {
         else {
             return nil
         }
+    }
+    
+    func shift() {
+        self.node = self.node?.nextNode
     }
 }
 
