@@ -23,36 +23,44 @@
 import Foundation
 import QuartzCore
 
-protocol LRUObjectBase: Equatable {
+protocol LRUObject: Equatable {
     
     var key: String { get }
     var cost: UInt { get set }
 }
 
-class LRUGenerate<T: LRUObjectBase> : GeneratorType {
+class LRUGenerator<T: LRUObject> : FastGeneratorType {
     
     typealias Element = T
 
-    private let linkedListGenerate: LinkedListGenerate<T>?
+    private let linkedListGenerator: LinkedListGenerator<T>
     
     private let lru: LRU<T>
     
-    private init(linkedListGenerate: LinkedListGenerate<T>?, lru: LRU<T>) {
-        self.linkedListGenerate = linkedListGenerate
+    private init(linkedListGenerator: LinkedListGenerator<T>, lru: LRU<T>) {
+        self.linkedListGenerator = linkedListGenerator
         self.lru = lru
     }
     
+    @warn_unused_result
     func next() -> Element? {
-        if let node = linkedListGenerate?.next() {
+        if let node = linkedListGenerator.next() {
             lru._linkedList.removeNode(node)
             lru._linkedList.insertNode(node, atIndex: 0)
             return node.data
         }
         return nil
     }
+    
+    func shift() {
+        if let node = linkedListGenerator.next() {
+            lru._linkedList.removeNode(node)
+            lru._linkedList.insertNode(node, atIndex: 0)
+        }
+    }
 }
 
-class LRU<T: LRUObjectBase> {
+class LRU<T: LRUObject> {
     
     private typealias NodeType = Node<T>
     
@@ -155,12 +163,12 @@ class LRU<T: LRUObjectBase> {
 
 extension LRU : SequenceType {
     
-    typealias Generator = LRUGenerate<T>
+    typealias Generator = LRUGenerator<T>
     
     @warn_unused_result
-    func generate() -> LRUGenerate<T> {
-        var generatror: LRUGenerate<T>
-        generatror = LRUGenerate(linkedListGenerate: _linkedList.generate(), lru: self)
+    func generate() -> LRUGenerator<T> {
+        var generatror: LRUGenerator<T>
+        generatror = LRUGenerator(linkedListGenerator: _linkedList.generate(), lru: self)
         return generatror
     }
 }
@@ -176,7 +184,7 @@ private class Node<T: Equatable> {
     }
 }
 
-private class LinkedListGenerate<T: Equatable> : GeneratorType {
+private class LinkedListGenerator<T: Equatable> : FastGeneratorType {
     
     typealias Element = Node<T>
     
@@ -186,6 +194,7 @@ private class LinkedListGenerate<T: Equatable> : GeneratorType {
         self.node = node
     }
     
+    @warn_unused_result
     func next() -> Element? {
         if let node = self.node {
             self.node = node.nextNode
@@ -194,6 +203,10 @@ private class LinkedListGenerate<T: Equatable> : GeneratorType {
         else {
             return nil
         }
+    }
+    
+    func shift() {
+        self.node = self.node?.nextNode
     }
 }
 
@@ -287,12 +300,12 @@ private class LinkedList<T: Equatable> {
 
 extension LinkedList : SequenceType {
     
-    private typealias Generator = LinkedListGenerate<T>
+    private typealias Generator = LinkedListGenerator<T>
     
     @warn_unused_result
-    private func generate() -> LinkedListGenerate<T> {
-        var generatror: LinkedListGenerate<T>
-        generatror = LinkedListGenerate(node: headNode)
+    private func generate() -> LinkedListGenerator<T> {
+        var generatror: LinkedListGenerator<T>
+        generatror = LinkedListGenerator(node: headNode)
         return generatror
     }
 }

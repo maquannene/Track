@@ -26,37 +26,25 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         let time: UInt = 5
         
 //          Track
-        let memoryCache: MemoryCache = MemoryCache.shareInstance
-
-//        printTime {
-//            for i in 0 ... time {
-//                cache.set(object: "\(i)", forKey: "\(i)")
-//            }
+        let cache: Cache = Cache.shareInstance
+        
+//        for i in 1 ... 5 {
+//            cache.set(object: "\(i)", forKey: "\(i)")
 //        }
 //        
-//        printTime {
-//            for i in 0 ... time {
-//                if i < 3 {
-//                    cache.removeObject(forKey: "\(i)")
-//                }
-//            }
-//        }
-//    
-        memoryCache.countLimit = 5
-
-        for i in 1 ... 10 {
-            memoryCache.set(object: "\(i)", forKey: "\(i)")
+        for i in 6 ... 7 {
+            cache.set(object: "\(i)", forKey: "\(i)")
         }
-
-        for object in memoryCache {
+        
+        for object in cache {
             print(object)
         }
-
-        memoryCache.forEach {
+        
+        cache.forEach {
             print($0)
         }
 
-        let values = memoryCache.map { return $0 }
+        let values = cache.map { return $0 }
 
         print(values)
 

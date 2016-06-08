@@ -16,7 +16,7 @@ Track is a thread safe cache write by Swift. Composed of DiskCache and MemoryCac
 
 * Support async and sync operation.
 
-* MemoryCache implement `SequenceType`, support `subscrip` `for ... in` `map` `flapmap` `filter`...
+* Cache implement `SequenceType` `Generator`, support `subscrip` `for ... in` `map` `flapmap` `filter`...
 
 ## Use
 
@@ -58,35 +58,44 @@ memorycache.trim(toAge: 1000) { (cache, key, object) in }
 memorycache.trim(toCount: 10) { (cache, key, object) in }
 ```
 
-**New features: for ... in**
+**New features: SequenceType Generator**
 
-MemoryCache support thread safe `for ... in` `map` `forEache`
+Cache support thread safe `for ... in` `map` `forEache`...
 
 ```swift
-memoryCache.countLimit = 5
+let cache: Cache = Cache.shareInstance
 
-for i in 1 ... 10 {
-    memoryCache.set(object: "\(i)", forKey: "\(i)")
+for i in 1 ... 5 {
+    cache.set(object: "\(i)", forKey: "\(i)")
 }
 
-for object in memoryCache {
+for object in cache {
     print(object)
 }
+```
 
-// output: 10 9 8 7 6
+```
+output: ("5", 5) ("4", 4) ("3", 3) ("2", 2) ("1", 1)
+```
 
-memoryCache.forEach {
+```
+cache.forEach {
     print($0)
 }
+```
 
-// output: 6 7 8 9 10
+```
+output: ("1", 1) ("2", 2) ("3", 3) ("4", 4) ("5", 5)
+```
 
-let values = memoryCache.map { return $0 }
+```
+let values = cache.map { return $0 }
 
 print(values)
+```
 
-// output: [10, 9, 8, 7, 6]
-
+```
+output: [("5", 5), ("4", 4), ("3", 3), ("2", 2), ("1", 1)]
 ```
 
 ## Installation

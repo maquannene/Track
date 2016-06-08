@@ -38,8 +38,42 @@
 import Foundation
 import UIKit
 
-private class MemoryCacheObject: LRUObjectBase {
+/**
+ MemoryCacheGenerator, support `for...in` `map` `forEach`..., it is thread safe.
+ */
+public class MemoryCacheGenerator : GeneratorType {
+    
+    public typealias Element = (String, AnyObject)
+    
+    private var _lruGenerator: LRUGenerator<MemoryCacheObject>
+    
+    private var _completion: (() -> Void)?
+    
+    private init(generate: LRUGenerator<MemoryCacheObject>, cache: MemoryCache, completion: (() -> Void)?) {
+        self._lruGenerator = generate
+        self._completion = completion
+    }
+    
+    /**
+    Advance to the next element and return it, or `nil` if no next element exists.
+     
+     - returns: next element
+     */
+    @warn_unused_result
+    public func next() -> Element? {
+        if let object = _lruGenerator.next() {
+            return (object.key, object.value)
+        }
+        return nil
+    }
+    
+    deinit {
+        _completion?()
+    }
+}
 
+private class MemoryCacheObject: LRUObject {
+    
     var key: String = ""
     var cost: UInt = 0
     var time: NSTimeInterval = CACurrentMediaTime()
@@ -59,40 +93,10 @@ private func == (lhs: MemoryCacheObject, rhs: MemoryCacheObject) -> Bool {
 public typealias MemoryCacheAsyncCompletion = (cache: MemoryCache?, key: String?, object: AnyObject?) -> Void
 
 /**
- MemoryCacheGenerator, support `for`...`in` loops, it is thread safe.
- */
-public class MemoryCacheGenerator : GeneratorType {
-    
-    public typealias Element = AnyObject
-    
-    private var lruGenerate: LRUGenerate<MemoryCacheObject>?
-    
-    private var completion: (() -> Void)?
-    
-    private init(generate: LRUGenerate<MemoryCacheObject>?, cache: MemoryCache, completion: (() -> Void)?) {
-        self.lruGenerate = generate
-        self.completion = completion
-    }
-    
-    /**
-    Advance to the next element and return it, or `nil` if no next element exists.
-     
-     - returns: next element
-     */
-    public func next() -> Element? {
-        return self.lruGenerate?.next()?.value
-    }
-    
-    deinit {
-        completion?()
-    }
-}
-
-/**
  MemoryCache is a thread safe cache implement by dispatch_semaphore_t lock and DISPATCH_QUEUE_CONCURRENT.
  Cache algorithms policy use LRU (Least Recently Used), implement by linked list and cache in NSDictionary.
  You can manage cache through functions to limit size, age of entries and memory usage to eliminate least recently used object.
- And support thread safe `for`...`in` loops.
+ And support thread safe `for`...`in` loops, map, forEach...
  */
 public class MemoryCache {
     
@@ -338,13 +342,7 @@ public extension MemoryCache {
      */
     public func set(object object: AnyObject, forKey key: String, cost: UInt = 0) {
         _lock()
-        _cache.set(object: MemoryCacheObject(key: key, value: object, cost: cost), forKey: key)
-        if _cache.cost > _costLimit {
-            _unsafeTrim(toCost: _costLimit)
-        }
-        if _cache.count > _countLimit {
-            _unsafeTrim(toCount: _countLimit)
-        }
+        _unsafeSet(object: object, forKey: key, cost: cost)
         _unlock()
     }
     
@@ -455,7 +453,7 @@ extension MemoryCache : SequenceType {
 
 //  MARK:
 //  MARK: Private
-private extension MemoryCache {
+extension MemoryCache {
     
     @objc private func _didReceiveMemoryWarningNotification() {
         if self.autoRemoveAllObjectWhenMemoryWarning {
@@ -515,11 +513,21 @@ private extension MemoryCache {
         }
     }
     
-    func _lock() {
+    func _unsafeSet(object object: AnyObject, forKey key: String, cost: UInt = 0) {
+        _cache.set(object: MemoryCacheObject(key: key, value: object, cost: cost), forKey: key)
+        if _cache.cost > _costLimit {
+            _unsafeTrim(toCost: _costLimit)
+        }
+        if _cache.count > _countLimit {
+            _unsafeTrim(toCount: _countLimit)
+        }
+    }
+    
+    private func _lock() {
         dispatch_semaphore_wait(_semaphoreLock, DISPATCH_TIME_FOREVER)
     }
     
-    func _unlock() {
+    private func _unlock() {
         dispatch_semaphore_signal(_semaphoreLock)
     }
 }
