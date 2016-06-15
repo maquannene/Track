@@ -86,10 +86,6 @@ private class MemoryCacheObject: LRUObject {
     }
 }
 
-private func == (lhs: MemoryCacheObject, rhs: MemoryCacheObject) -> Bool {
-    return lhs.key == rhs.key
-}
-
 public typealias MemoryCacheAsyncCompletion = (cache: MemoryCache?, key: String?, object: AnyObject?) -> Void
 
 /**
@@ -516,10 +512,10 @@ extension MemoryCache {
     func _unsafeSet(object object: AnyObject, forKey key: String, cost: UInt = 0) {
         _cache.set(object: MemoryCacheObject(key: key, value: object, cost: cost), forKey: key)
         if _cache.cost > _costLimit {
-            _unsafeTrim(toCost: _costLimit)
+            trim(toCost: _costLimit, completion: nil)
         }
         if _cache.count > _countLimit {
-            _unsafeTrim(toCount: _countLimit)
+            trim(toCount: _countLimit, completion: nil)
         }
     }
     
