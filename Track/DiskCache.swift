@@ -377,10 +377,10 @@ public extension DiskCache {
             } catch {}
         }
         if _cache.cost > _costLimit {
-            trim(toCost: _costLimit, completion: nil)
+            _unsafeTrim(toCost: _costLimit)
         }
         if _cache.count > _countLimit {
-            trim(toCount: _countLimit, completion: nil)
+            _unsafeTrim(toCount: _countLimit)
         }
         _unlock()
     }

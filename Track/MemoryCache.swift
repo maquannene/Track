@@ -512,10 +512,10 @@ extension MemoryCache {
     func _unsafeSet(object object: AnyObject, forKey key: String, cost: UInt = 0) {
         _cache.set(object: MemoryCacheObject(key: key, value: object, cost: cost), forKey: key)
         if _cache.cost > _costLimit {
-            trim(toCost: _costLimit, completion: nil)
+            _unsafeTrim(toCost: _costLimit)
         }
         if _cache.count > _countLimit {
-            trim(toCount: _countLimit, completion: nil)
+            _unsafeTrim(toCount: _countLimit)
         }
     }
     
