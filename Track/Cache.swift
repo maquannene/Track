@@ -35,8 +35,6 @@ public class CacheGenerator : GeneratorType {
     
     private var _memoryCache: MemoryCache
     
-    private let _queue: dispatch_queue_t = dispatch_queue_create("xxxx", DISPATCH_QUEUE_SERIAL)
-    
     private let _semaphoreLock: dispatch_semaphore_t = dispatch_semaphore_create(1)
     
     private init(memoryCacheGenerator: MemoryCacheGenerator, diskCacheGenerator: DiskCacheGenerator, memoryCache: MemoryCache) {

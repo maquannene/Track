@@ -112,10 +112,6 @@ private class DiskCacheObject: LRUObject {
     }
 }
 
-private func == (lhs: DiskCacheObject, rhs: DiskCacheObject) -> Bool {
-    return lhs.key == rhs.key
-}
-
 public typealias DiskCacheAsyncCompletion = (cache: DiskCache?, key: String?, object: AnyObject?) -> Void
 
 /**
@@ -381,10 +377,10 @@ public extension DiskCache {
             } catch {}
         }
         if _cache.cost > _costLimit {
-            _unsafeTrim(toCost: _costLimit)
+            trim(toCost: _costLimit, completion: nil)
         }
         if _cache.count > _countLimit {
-            _unsafeTrim(toCount: _countLimit)
+            trim(toCount: _countLimit, completion: nil)
         }
         _unlock()
     }

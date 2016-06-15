@@ -23,7 +23,7 @@
 import Foundation
 import QuartzCore
 
-protocol LRUObject: Equatable {
+protocol LRUObject {
     
     var key: String { get }
     var cost: UInt { get set }
@@ -45,8 +45,7 @@ class LRUGenerator<T: LRUObject> : FastGeneratorType {
     @warn_unused_result
     func next() -> Element? {
         if let node = linkedListGenerator.next() {
-            lru._linkedList.removeNode(node)
-            lru._linkedList.insertNode(node, atIndex: 0)
+            lru._linkedList.bringNodeToHead(node)
             return node.data
         }
         return nil
@@ -54,8 +53,7 @@ class LRUGenerator<T: LRUObject> : FastGeneratorType {
     
     func shift() {
         if let node = linkedListGenerator.next() {
-            lru._linkedList.removeNode(node)
-            lru._linkedList.insertNode(node, atIndex: 0)
+            lru._linkedList.bringNodeToHead(node)
         }
     }
 }
@@ -75,25 +73,23 @@ class LRU<T: LRUObject> {
     private let _linkedList: LinkedList = LinkedList<T>()
     
     func set(object object: T, forKey key: String) {
-        if let node = _dic.objectForKey(key) as? NodeType {
+        if let node: NodeType = _dic.objectForKey(key) as? NodeType {
             cost -= node.data.cost
             cost += object.cost
             node.data = object
-            _linkedList.removeNode(node)
-            _linkedList.insertNode(node, atIndex: 0)
+            _linkedList.bringNodeToHead(node)
         }
         else {
-            let node = Node(data: object)
+            let node: NodeType = Node(data: object)
             cost += object.cost
-            _dic.setObject(node, forKey: node.data.key)
+            _dic.setObject(node, forKey: key)
             _linkedList.insertNode(node, atIndex: 0)
         }
     }
 
     func object(forKey key: String) -> T? {
-        if let node = _dic.objectForKey(key) as? NodeType {
-            _linkedList.removeNode(node)
-            _linkedList.insertNode(node, atIndex: 0)
+        if let node: NodeType = _dic.objectForKey(key) as? NodeType {
+            _linkedList.bringNodeToHead(node)
             return node.data
         }
         return nil
@@ -103,7 +99,7 @@ class LRU<T: LRUObject> {
         var objects: [T] = [T]()
         var indexNode: NodeType? = _linkedList.headNode
         while (true) {
-            if let node = indexNode {
+            if let node: NodeType = indexNode {
                 objects.append(node.data)
                 indexNode = node.nextNode
             }
@@ -115,8 +111,8 @@ class LRU<T: LRUObject> {
     }
     
     func removeObject(forKey key: String) -> T? {
-        if let node = _dic.objectForKey(key) as? NodeType {
-            _dic.removeObjectForKey(node.data.key)
+        if let node: NodeType = _dic.objectForKey(key) as? NodeType {
+            _dic.removeObjectForKey(key)
             _linkedList.removeNode(node)
             cost -= node.data.cost
             return node.data
@@ -131,7 +127,7 @@ class LRU<T: LRUObject> {
     }
     
     func removeLastObject() {
-        if let lastNode = _linkedList.tailNode as NodeType? {
+        if let lastNode: NodeType = _linkedList.tailNode as NodeType? {
             _dic.removeObjectForKey(lastNode.data.key)
             _linkedList.removeNode(lastNode)
             cost -= lastNode.data.cost
@@ -173,7 +169,7 @@ extension LRU : SequenceType {
     }
 }
 
-private class Node<T: Equatable> {
+private class Node<T> {
     
     weak var preNode: Node?
     weak var nextNode: Node?
@@ -184,7 +180,7 @@ private class Node<T: Equatable> {
     }
 }
 
-private class LinkedListGenerator<T: Equatable> : FastGeneratorType {
+private class LinkedListGenerator<T> : FastGeneratorType {
     
     typealias Element = Node<T>
     
@@ -196,7 +192,7 @@ private class LinkedListGenerator<T: Equatable> : FastGeneratorType {
     
     @warn_unused_result
     func next() -> Element? {
-        if let node = self.node {
+        if let node: Element = self.node {
             self.node = node.nextNode
             return node
         }
@@ -210,7 +206,7 @@ private class LinkedListGenerator<T: Equatable> : FastGeneratorType {
     }
 }
 
-private class LinkedList<T: Equatable> {
+private class LinkedList<T> {
     
     var count: UInt = 0
     weak var headNode: Node<T>?
@@ -252,15 +248,34 @@ private class LinkedList<T: Equatable> {
         count += 1
     }
 
+    func bringNodeToHead(node: Node<T>) {
+        if let hNode: Node<T> = headNode where unsafeAddressOf(node) == unsafeAddressOf(hNode) {
+            return
+        }
+        if let tNode: Node<T> = tailNode where unsafeAddressOf(node) == unsafeAddressOf(tNode) {
+            tailNode = node.preNode
+            tailNode?.nextNode = nil
+        }
+        else {
+            node.nextNode?.preNode = node.preNode
+            node.preNode?.nextNode = node.nextNode
+        }
+        
+        node.preNode = nil
+        node.nextNode = headNode
+        headNode?.preNode = node
+        headNode = node
+    }
+    
     func removeNode(node: Node<T>) {
         if count == 0 {
             return
         }
-        if node.data == headNode?.data {
+        if let hNode: Node<T> = headNode where unsafeAddressOf(node) == unsafeAddressOf(hNode) {
             headNode = node.nextNode
             headNode?.preNode = nil
         }
-        else if node.data == tailNode?.data {
+        else if let tNode: Node<T> = tailNode where unsafeAddressOf(node) == unsafeAddressOf(tNode) {
             tailNode = node.preNode
             tailNode?.nextNode = nil
         }
