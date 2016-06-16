@@ -348,12 +348,13 @@ public extension MemoryCache {
      */
     @warn_unused_result
     public func object(forKey key: String) -> AnyObject? {
-        var object: MemoryCacheObject? = nil
+        var object: AnyObject? = nil
         _lock()
-        object = _cache.object(forKey: key)
-        object?.time = CACurrentMediaTime()
+        let memoryObject: MemoryCacheObject? = _cache.object(forKey: key)
+        memoryObject?.time = CACurrentMediaTime()
+        object = memoryObject?.value
         _unlock()
-        return object?.value
+        return object
     }
     
     /**
