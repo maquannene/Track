@@ -249,10 +249,10 @@ private class LinkedList<T> {
     }
 
     func bringNodeToHead(node: Node<T>) {
-        if let hNode: Node<T> = headNode where unsafeAddressOf(node) == unsafeAddressOf(hNode) {
+        if node === headNode {
             return
         }
-        if let tNode: Node<T> = tailNode where unsafeAddressOf(node) == unsafeAddressOf(tNode) {
+        if node === tailNode {
             tailNode = node.preNode
             tailNode?.nextNode = nil
         }
@@ -271,11 +271,11 @@ private class LinkedList<T> {
         if count == 0 {
             return
         }
-        if let hNode: Node<T> = headNode where unsafeAddressOf(node) == unsafeAddressOf(hNode) {
+        if node === headNode {
             headNode = node.nextNode
             headNode?.preNode = nil
         }
-        else if let tNode: Node<T> = tailNode where unsafeAddressOf(node) == unsafeAddressOf(tNode) {
+        else if node === tailNode {
             tailNode = node.preNode
             tailNode?.nextNode = nil
         }
