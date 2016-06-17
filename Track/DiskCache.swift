@@ -346,7 +346,7 @@ public extension DiskCache {
     /**
      Async trim disk cache objects which age greater than ageLimit
      
-     - parameter costLimit:  maximum costLimit
+     - parameter ageLimit:  maximum ageLimit
      */
     public func trim(toAge ageLimit: NSTimeInterval, completion: DiskCacheAsyncCompletion?) {
         dispatch_async(_queue) { [weak self] in
