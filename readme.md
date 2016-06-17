@@ -134,3 +134,5 @@ Thanks YYCache，PINCache very much. Some ideas from them.
 ## License
 
 Track is released under the MIT license.
+
+如果来自天朝[点击查看](https://github.com/maquannene/Track/blob/master/%E5%A6%82%E6%9E%9C%E4%BD%A0%E5%9C%A8%E5%A4%A9%E6%9C%9D.md)更多实现细节文章
