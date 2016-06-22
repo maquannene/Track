@@ -322,7 +322,7 @@ public extension MemoryCache {
     /**
      Async trim memory cache objects which age greater than ageLimit
      
-     - parameter costLimit:  maximum costLimit
+     - parameter ageLimit:  maximum ageLimit
      */
     public func trim(toAge ageLimit: NSTimeInterval, completion: MemoryCacheAsyncCompletion?) {
         dispatch_async(_queue) { [weak self] in
@@ -395,8 +395,6 @@ public extension MemoryCache {
     
     /**
      Sync trim memory cache objects which age greater than ageLimit
-     
-     - parameter costLimit:  maximum costLimit
      */
     public func trim(toAge ageLimit: NSTimeInterval) {
         _lock()
