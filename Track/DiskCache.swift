@@ -241,7 +241,7 @@ public class DiskCache {
             return nil
         }
         self.name = name
-        self.cacheURL = NSURL(string: path)!.URLByAppendingPathComponent(TrackCachePrefix + name, isDirectory: false)
+        self.cacheURL = NSURL(fileURLWithPath: path).URLByAppendingPathComponent(TrackCachePrefix + name, isDirectory: false)
         
         _lock()
         dispatch_async(_queue) {
@@ -362,13 +362,13 @@ public extension DiskCache {
      */
     public func set(object object: NSCoding, forKey key: String) {
         let fileURL = _generateFileURL(key, path: cacheURL)
+        guard let filePath = fileURL.path else { return }
         _lock()
-        
-        if NSKeyedArchiver.archiveRootObject(object, toFile: fileURL.absoluteString) == true {
+        if NSKeyedArchiver.archiveRootObject(object, toFile: filePath) == true {
             do {
                 let date: NSDate = NSDate()
-                try NSFileManager.defaultManager().setAttributes([NSFileModificationDate : date], ofItemAtPath: fileURL.path!)
-                let infosDic: [String : AnyObject] = try NSURL(fileURLWithPath: fileURL.absoluteString).resourceValuesForKeys([NSURLTotalFileAllocatedSizeKey])
+                try NSFileManager.defaultManager().setAttributes([NSFileModificationDate : date], ofItemAtPath: filePath)
+                let infosDic: [String : AnyObject] = try fileURL.resourceValuesForKeys([NSURLTotalFileAllocatedSizeKey])
                 var fileSize: UInt = 0
                 if let fileSizeNumber = infosDic[NSURLTotalFileAllocatedSizeKey] as? NSNumber {
                     fileSize = fileSizeNumber.unsignedLongValue
@@ -401,11 +401,11 @@ public extension DiskCache {
      Sync remove object according to unique key from disk and remove object info from linked list
      */
     public func removeObject(forKey key: String) {
-        let fileURL = _generateFileURL(key, path: cacheURL)
+        guard let filePath = _generateFileURL(key, path: cacheURL).path else { return }
         _lock()
-        if NSFileManager.defaultManager().fileExistsAtPath(fileURL.absoluteString) {
+        if NSFileManager.defaultManager().fileExistsAtPath(filePath) {
             do {
-                try NSFileManager.defaultManager().removeItemAtPath(fileURL.absoluteString)
+                try NSFileManager.defaultManager().removeItemAtPath(filePath)
                 _cache.removeObject(forKey: key)
             } catch {}
         }
@@ -533,7 +533,6 @@ private extension DiskCache {
     private func _loadFilesInfo() -> Bool {
         var fileInfos: [DiskCacheObject] = [DiskCacheObject]()
         let fileInfoKeys: [String] = [NSURLContentModificationDateKey, NSURLTotalFileAllocatedSizeKey]
-        
         do {
             let filesURL: [NSURL] = try NSFileManager.defaultManager().contentsOfDirectoryAtURL(cacheURL, includingPropertiesForKeys: fileInfoKeys, options: .SkipsHiddenFiles)
             for fileURL: NSURL in filesURL {
@@ -563,10 +562,9 @@ private extension DiskCache {
     private func _unsafeTrim(toCount countLimit: UInt) {
         if var lastObject: DiskCacheObject = _cache.lastObject() {
             while (_cache.count > countLimit) {
-                let fileURL = _generateFileURL(lastObject.key, path: cacheURL)
-                if NSFileManager.defaultManager().fileExistsAtPath(fileURL.absoluteString) {
+                if let filePath = _generateFileURL(lastObject.key, path: cacheURL).path where NSFileManager.defaultManager().fileExistsAtPath(filePath) {
                     do {
-                        try NSFileManager.defaultManager().removeItemAtPath(fileURL.absoluteString)
+                        try NSFileManager.defaultManager().removeItemAtPath(filePath)
                         _cache.removeLastObject()
                         guard let newLastObject = _cache.lastObject() else { break }
                         lastObject = newLastObject
@@ -579,10 +577,9 @@ private extension DiskCache {
     private func _unsafeTrim(toCost costLimit: UInt) {
         if var lastObject: DiskCacheObject = _cache.lastObject() {
             while (_cache.cost > costLimit) {
-                let fileURL = _generateFileURL(lastObject.key, path: cacheURL)
-                if NSFileManager.defaultManager().fileExistsAtPath(fileURL.absoluteString) {
+                if let filePath = _generateFileURL(lastObject.key, path: cacheURL).path where NSFileManager.defaultManager().fileExistsAtPath(filePath) {
                     do {
-                        try NSFileManager.defaultManager().removeItemAtPath(fileURL.absoluteString)
+                        try NSFileManager.defaultManager().removeItemAtPath(filePath)
                         _cache.removeLastObject()
                         guard let newLastObject = _cache.lastObject() else { break }
                         lastObject = newLastObject
@@ -595,10 +592,9 @@ private extension DiskCache {
     private func _unsafeTrim(toAge ageLimit: NSTimeInterval) {
         if var lastObject: DiskCacheObject = _cache.lastObject() {
             while (lastObject.date.timeIntervalSince1970 < NSDate().timeIntervalSince1970 - ageLimit) {
-                let fileURL = _generateFileURL(lastObject.key, path: cacheURL)
-                if NSFileManager.defaultManager().fileExistsAtPath(fileURL.absoluteString) {
+                if let filePath = _generateFileURL(lastObject.key, path: cacheURL).path where NSFileManager.defaultManager().fileExistsAtPath(filePath) {
                     do {
-                        try NSFileManager.defaultManager().removeItemAtPath(fileURL.absoluteString)
+                        try NSFileManager.defaultManager().removeItemAtPath(filePath)
                         _cache.removeLastObject()
                         guard let newLastObject = _cache.lastObject() else { break }
                         lastObject = newLastObject
@@ -609,13 +605,13 @@ private extension DiskCache {
     }
     
     private func _unsafeObject(forKey key: String) -> AnyObject? {
-        let fileURL = _generateFileURL(key, path: cacheURL)
+        guard let filePath = _generateFileURL(key, path: cacheURL).path else { return nil }
         var object: AnyObject? = nil
         let date: NSDate = NSDate()
-        if NSFileManager.defaultManager().fileExistsAtPath(fileURL.absoluteString) {
-            object = NSKeyedUnarchiver.unarchiveObjectWithFile(fileURL.absoluteString)
+        if NSFileManager.defaultManager().fileExistsAtPath(filePath) {
+            object = NSKeyedUnarchiver.unarchiveObjectWithFile(filePath)
             do {
-                try NSFileManager.defaultManager().setAttributes([NSFileModificationDate : date], ofItemAtPath: fileURL.path!)
+                try NSFileManager.defaultManager().setAttributes([NSFileModificationDate : date], ofItemAtPath: filePath)
                 if object != nil {
                     if let diskCacheObj = _cache.object(forKey: key) {
                         diskCacheObj.date = date
