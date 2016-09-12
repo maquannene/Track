@@ -9,5 +9,6 @@ s.platform     = :ios, '8.0'
 s.ios.deployment_target = '8.0'
 s.source       = { :git => 'https://github.com/maquannene/Track.git', :tag => s.version.to_s }
 s.source_files = 'Track/*.{swift}'
-s.frameworks = 'UIKit', 'QuartzCore'
+s.frameworks   = 'UIKit', 'QuartzCore'
+ s.xcconfig    = { 'SWIFT_VERSION' => '3.0' }
 end
