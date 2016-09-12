@@ -119,6 +119,7 @@
 				TargetAttributes = {
 					D4ABC21E1CEB49AA00BF78D3 = {
 						CreatedOnToolsVersion = 7.3;
+						LastSwiftMigration = 0800;
 					};
 				};
 			};
@@ -283,6 +284,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "--.Demo";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Demo/Demo-Bridging-Header.h";
+				SWIFT_VERSION = 3.0;
 			};
 			name = Debug;
 		};
@@ -295,6 +297,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "--.Demo";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Demo/Demo-Bridging-Header.h";
+				SWIFT_VERSION = 3.0;
 			};
 			name = Release;
 		};

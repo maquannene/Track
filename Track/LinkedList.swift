@@ -33,16 +33,16 @@ class LRUGenerator<T: LRUObject> : FastGeneratorType {
     
     typealias Element = T
 
-    private let linkedListGenerator: LinkedListGenerator<T>
+    fileprivate let linkedListGenerator: LinkedListGenerator<T>
     
-    private let lru: LRU<T>
+    fileprivate let lru: LRU<T>
     
-    private init(linkedListGenerator: LinkedListGenerator<T>, lru: LRU<T>) {
+    fileprivate init(linkedListGenerator: LinkedListGenerator<T>, lru: LRU<T>) {
         self.linkedListGenerator = linkedListGenerator
         self.lru = lru
     }
     
-    @warn_unused_result
+    
     func next() -> Element? {
         if let node = linkedListGenerator.next() {
             lru._linkedList.bringNodeToHead(node)
@@ -60,20 +60,20 @@ class LRUGenerator<T: LRUObject> : FastGeneratorType {
 
 class LRU<T: LRUObject> {
     
-    private typealias NodeType = Node<T>
+    fileprivate typealias NodeType = Node<T>
     
     var count: UInt {
         return _linkedList.count
     }
     
-    private(set) var cost: UInt = 0
+    fileprivate(set) var cost: UInt = 0
     
-    private var _dic: NSMutableDictionary = NSMutableDictionary()
+    fileprivate var _dic: NSMutableDictionary = NSMutableDictionary()
     
-    private let _linkedList: LinkedList = LinkedList<T>()
+    fileprivate let _linkedList: LinkedList = LinkedList<T>()
     
-    func set(object object: T, forKey key: String) {
-        if let node: NodeType = _dic.objectForKey(key) as? NodeType {
+    func set(object: T, forKey key: String) {
+        if let node: NodeType = _dic.object(forKey: key) as? NodeType {
             cost -= node.data.cost
             cost += object.cost
             node.data = object
@@ -82,13 +82,13 @@ class LRU<T: LRUObject> {
         else {
             let node: NodeType = Node(data: object)
             cost += object.cost
-            _dic.setObject(node, forKey: key)
+            _dic.setObject(node, forKey: key as NSCopying)
             _linkedList.insertNode(node, atIndex: 0)
         }
     }
 
     func object(forKey key: String) -> T? {
-        if let node: NodeType = _dic.objectForKey(key) as? NodeType {
+        if let node: NodeType = _dic.object(forKey: key) as? NodeType {
             _linkedList.bringNodeToHead(node)
             return node.data
         }
@@ -111,8 +111,8 @@ class LRU<T: LRUObject> {
     }
     
     func removeObject(forKey key: String) -> T? {
-        if let node: NodeType = _dic.objectForKey(key) as? NodeType {
-            _dic.removeObjectForKey(key)
+        if let node: NodeType = _dic.object(forKey: key) as? NodeType {
+            _dic.removeObject(forKey: key)
             _linkedList.removeNode(node)
             cost -= node.data.cost
             return node.data
@@ -128,7 +128,7 @@ class LRU<T: LRUObject> {
     
     func removeLastObject() {
         if let lastNode: NodeType = _linkedList.tailNode as NodeType? {
-            _dic.removeObjectForKey(lastNode.data.key)
+            _dic.removeObject(forKey: lastNode.data.key)
             _linkedList.removeNode(lastNode)
             cost -= lastNode.data.cost
             return
@@ -157,14 +157,14 @@ class LRU<T: LRUObject> {
     }
 }
 
-extension LRU : SequenceType {
+extension LRU : Sequence {
     
-    typealias Generator = LRUGenerator<T>
+    typealias Iterator = LRUGenerator<T>
     
-    @warn_unused_result
-    func generate() -> LRUGenerator<T> {
+    
+    func makeIterator() -> LRUGenerator<T> {
         var generatror: LRUGenerator<T>
-        generatror = LRUGenerator(linkedListGenerator: _linkedList.generate(), lru: self)
+        generatror = LRUGenerator(linkedListGenerator: _linkedList.makeIterator(), lru: self)
         return generatror
     }
 }
@@ -190,7 +190,7 @@ private class LinkedListGenerator<T> : FastGeneratorType {
         self.node = node
     }
     
-    @warn_unused_result
+    
     func next() -> Element? {
         if let node: Element = self.node {
             self.node = node.nextNode
@@ -216,7 +216,7 @@ private class LinkedList<T> {
         
     }
 
-    func insertNode(node: Node<T>, atIndex index: UInt) {
+    func insertNode(_ node: Node<T>, atIndex index: UInt) {
         if index > count {
             return
         }
@@ -248,7 +248,7 @@ private class LinkedList<T> {
         count += 1
     }
 
-    func bringNodeToHead(node: Node<T>) {
+    func bringNodeToHead(_ node: Node<T>) {
         if node === headNode {
             return
         }
@@ -267,7 +267,7 @@ private class LinkedList<T> {
         headNode = node
     }
     
-    func removeNode(node: Node<T>) {
+    func removeNode(_ node: Node<T>) {
         if count == 0 {
             return
         }
@@ -313,12 +313,12 @@ private class LinkedList<T> {
     }
 }
 
-extension LinkedList : SequenceType {
+extension LinkedList : Sequence {
     
-    private typealias Generator = LinkedListGenerator<T>
+    fileprivate typealias Iterator = LinkedListGenerator<T>
     
-    @warn_unused_result
-    private func generate() -> LinkedListGenerator<T> {
+    
+    fileprivate func makeIterator() -> LinkedListGenerator<T> {
         var generatror: LinkedListGenerator<T>
         generatror = LinkedListGenerator(node: headNode)
         return generatror

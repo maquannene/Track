@@ -41,15 +41,15 @@ import UIKit
 /**
  MemoryCacheGenerator, support `for...in` `map` `forEach`..., it is thread safe.
  */
-public class MemoryCacheGenerator : GeneratorType {
+open class MemoryCacheGenerator : IteratorProtocol {
     
     public typealias Element = (String, AnyObject)
     
-    private var _lruGenerator: LRUGenerator<MemoryCacheObject>
+    fileprivate var _lruGenerator: LRUGenerator<MemoryCacheObject>
     
-    private var _completion: (() -> Void)?
+    fileprivate var _completion: (() -> Void)?
     
-    private init(generate: LRUGenerator<MemoryCacheObject>, cache: MemoryCache, completion: (() -> Void)?) {
+    fileprivate init(generate: LRUGenerator<MemoryCacheObject>, cache: MemoryCache, completion: (() -> Void)?) {
         self._lruGenerator = generate
         self._completion = completion
     }
@@ -59,8 +59,8 @@ public class MemoryCacheGenerator : GeneratorType {
      
      - returns: next element
      */
-    @warn_unused_result
-    public func next() -> Element? {
+    
+    open func next() -> Element? {
         if let object = _lruGenerator.next() {
             return (object.key, object.value)
         }
@@ -76,7 +76,7 @@ private class MemoryCacheObject: LRUObject {
     
     var key: String = ""
     var cost: UInt = 0
-    var time: NSTimeInterval = CACurrentMediaTime()
+    var time: TimeInterval = CACurrentMediaTime()
     var value: AnyObject
     
     init(key: String, value: AnyObject, cost: UInt = 0) {
@@ -86,7 +86,7 @@ private class MemoryCacheObject: LRUObject {
     }
 }
 
-public typealias MemoryCacheAsyncCompletion = (cache: MemoryCache?, key: String?, object: AnyObject?) -> Void
+public typealias MemoryCacheAsyncCompletion = (_ cache: MemoryCache?, _ key: String?, _ object: AnyObject?) -> Void
 
 /**
  MemoryCache is a thread safe cache implement by dispatch_semaphore_t lock and DISPATCH_QUEUE_CONCURRENT.
@@ -94,12 +94,12 @@ public typealias MemoryCacheAsyncCompletion = (cache: MemoryCache?, key: String?
  You can manage cache through functions to limit size, age of entries and memory usage to eliminate least recently used object.
  And support thread safe `for`...`in` loops, map, forEach...
  */
-public class MemoryCache {
+open class MemoryCache {
     
     /**
      Memory cache object total count
      */
-    public var totalCount: UInt {
+    open var totalCount: UInt {
         get {
             _lock()
             let count = _cache.count
@@ -111,7 +111,7 @@ public class MemoryCache {
     /**
      Memory cache object total cost, if not set cost when set object, total cost may be zero
      */
-    public var totalCost: UInt {
+    open var totalCost: UInt {
         get {
             _lock()
             let cost = _cache.cost
@@ -120,12 +120,12 @@ public class MemoryCache {
         }
     }
     
-    private var _countLimit: UInt = UInt.max
+    fileprivate var _countLimit: UInt = UInt.max
     
     /**
      The maximum total count limit
      */
-    public var countLimit: UInt {
+    open var countLimit: UInt {
         set {
             _lock()
             _countLimit = newValue
@@ -140,12 +140,12 @@ public class MemoryCache {
         }
     }
     
-    private var _costLimit: UInt = UInt.max
+    fileprivate var _costLimit: UInt = UInt.max
     
     /**
      The maximum memory cost limit
      */
-    public var costLimit: UInt {
+    open var costLimit: UInt {
         set {
             _lock()
             _costLimit = newValue
@@ -160,12 +160,12 @@ public class MemoryCache {
         }
     }
     
-    private var _ageLimit: NSTimeInterval = DBL_MAX
+    fileprivate var _ageLimit: TimeInterval = DBL_MAX
     
     /**
      Memory cache object age limit
      */
-    public var ageLimit: NSTimeInterval {
+    open var ageLimit: TimeInterval {
         set {
             _lock()
             _ageLimit = newValue
@@ -180,12 +180,12 @@ public class MemoryCache {
         }
     }
     
-    private var _autoRemoveAllObjectWhenMemoryWarning: Bool = true
+    fileprivate var _autoRemoveAllObjectWhenMemoryWarning: Bool = true
     
     /**
      Auto remove all object when memory warning
      */
-    public var autoRemoveAllObjectWhenMemoryWarning: Bool {
+    open var autoRemoveAllObjectWhenMemoryWarning: Bool {
         set {
             _lock()
             _autoRemoveAllObjectWhenMemoryWarning = newValue
@@ -199,12 +199,12 @@ public class MemoryCache {
         }
     }
     
-    private var _autoRemoveAllObjectWhenEnterBackground = false
+    fileprivate var _autoRemoveAllObjectWhenEnterBackground = false
     
     /**
      Auto remove all object when enter background
      */
-    public var autoRemoveAllObjectWhenEnterBackground: Bool {
+    open var autoRemoveAllObjectWhenEnterBackground: Bool {
         set {
             _lock()
             _autoRemoveAllObjectWhenEnterBackground = newValue
@@ -218,23 +218,23 @@ public class MemoryCache {
         }
     }
     
-    private let _cache: LRU = LRU<MemoryCacheObject>()
+    fileprivate let _cache: LRU = LRU<MemoryCacheObject>()
     
-    private let _queue: dispatch_queue_t = dispatch_queue_create(TrackCachePrefix + String(MemoryCache), DISPATCH_QUEUE_CONCURRENT)
+    fileprivate let _queue: DispatchQueue = DispatchQueue(label: TrackCachePrefix + String(describing: MemoryCache), attributes: DispatchQueue.Attributes.concurrent)
     
-    private let _semaphoreLock: dispatch_semaphore_t = dispatch_semaphore_create(1)
+    fileprivate let _semaphoreLock: DispatchSemaphore = DispatchSemaphore(value: 1)
     
     /**
      A share memory cache
      */
-    public static let shareInstance = MemoryCache()
+    open static let shareInstance = MemoryCache()
     
     /**
      Design constructor
      */
     public init () {
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(MemoryCache._didReceiveMemoryWarningNotification), name: UIApplicationDidReceiveMemoryWarningNotification, object: nil)
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(MemoryCache._didEnterBackgroundNotification), name: UIApplicationDidEnterBackgroundNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(MemoryCache._didReceiveMemoryWarningNotification), name: NSNotification.Name.UIApplicationDidReceiveMemoryWarning, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(MemoryCache._didEnterBackgroundNotification), name: NSNotification.Name.UIApplicationDidEnterBackground, object: nil)
     }
 }
 
@@ -251,11 +251,11 @@ public extension MemoryCache {
      - parameter key:        unique key
      - parameter completion: stroe completion call back
      */
-    public func set(object object: AnyObject, forKey key: String, cost: UInt = 0, completion: MemoryCacheAsyncCompletion?) {
-        dispatch_async(_queue) { [weak self] in
-            guard let strongSelf = self else { completion?(cache: nil, key: key, object: object); return }
+    public func set(object: AnyObject, forKey key: String, cost: UInt = 0, completion: MemoryCacheAsyncCompletion?) {
+        _queue.async { [weak self] in
+            guard let strongSelf = self else { completion?(nil, key, object); return }
             strongSelf.set(object: object, forKey: key, cost: cost)
-            completion?(cache: strongSelf, key: key, object: object)
+            completion?(strongSelf, key, object)
         }
     }
     
@@ -264,10 +264,10 @@ public extension MemoryCache {
      if find object, object will move to linked list head
      */
     public func object(forKey key: String, completion: MemoryCacheAsyncCompletion?) {
-        dispatch_async(_queue) { [weak self] in
-            guard let strongSelf = self else { completion?(cache: nil, key: key, object: nil); return }
+        _queue.async { [weak self] in
+            guard let strongSelf = self else { completion?(nil, key, nil); return }
             let object = strongSelf.object(forKey: key)
-            completion?(cache: strongSelf, key: key, object: object)
+            completion?(strongSelf, key, object)
         }
     }
     
@@ -275,21 +275,21 @@ public extension MemoryCache {
      Async remove object according to unique key from cache dic and linked list
      */
     public func removeObject(forKey key: String, completion: MemoryCacheAsyncCompletion?) {
-        dispatch_async(_queue) { [weak self] in
-            guard let strongSelf = self else { completion?(cache: nil, key: key, object: nil); return }
+        _queue.async { [weak self] in
+            guard let strongSelf = self else { completion?(nil, key, nil); return }
             strongSelf.removeObject(forKey: key)
-            completion?(cache: strongSelf, key: key, object: nil)
+            completion?(strongSelf, key, nil)
         }
     }
     
     /**
      Async remove all object and info from cache dic and clean linked list
      */
-    public func removeAllObjects(completion: MemoryCacheAsyncCompletion?) {
-        dispatch_async(_queue) { [weak self] in
-            guard let strongSelf = self else { completion?(cache: nil, key: nil, object: nil); return }
+    public func removeAllObjects(_ completion: MemoryCacheAsyncCompletion?) {
+        _queue.async { [weak self] in
+            guard let strongSelf = self else { completion?(nil, nil, nil); return }
             strongSelf.removeAllObjects()
-            completion?(cache: strongSelf, key: nil, object: nil)
+            completion?(strongSelf, nil, nil)
         }
     }
     
@@ -299,10 +299,10 @@ public extension MemoryCache {
      - parameter countLimit: maximum countLimit
      */
     public func trim(toCount countLimit: UInt, completion: MemoryCacheAsyncCompletion?) {
-        dispatch_async(_queue) { [weak self] in
-            guard let strongSelf = self else { completion?(cache: nil, key: nil, object: nil); return }
+        _queue.async { [weak self] in
+            guard let strongSelf = self else { completion?(nil, nil, nil); return }
             strongSelf.trim(toCount: countLimit)
-            completion?(cache: strongSelf, key: nil, object: nil)
+            completion?(strongSelf, nil, nil)
         }
     }
     
@@ -312,10 +312,10 @@ public extension MemoryCache {
      - parameter costLimit:  maximum costLimit
      */
     public func trim(toCost costLimit: UInt, completion: MemoryCacheAsyncCompletion?) {
-        dispatch_async(_queue) { [weak self] in
-            guard let strongSelf = self else { completion?(cache: nil, key: nil, object: nil); return }
+        _queue.async { [weak self] in
+            guard let strongSelf = self else { completion?(nil, nil, nil); return }
             strongSelf.trim(toCost: costLimit)
-            completion?(cache: strongSelf, key: nil, object: nil)
+            completion?(strongSelf, nil, nil)
         }
     }
     
@@ -324,11 +324,11 @@ public extension MemoryCache {
      
      - parameter ageLimit:  maximum ageLimit
      */
-    public func trim(toAge ageLimit: NSTimeInterval, completion: MemoryCacheAsyncCompletion?) {
-        dispatch_async(_queue) { [weak self] in
-            guard let strongSelf = self else { completion?(cache: nil, key: nil, object: nil); return }
+    public func trim(toAge ageLimit: TimeInterval, completion: MemoryCacheAsyncCompletion?) {
+        _queue.async { [weak self] in
+            guard let strongSelf = self else { completion?(nil, nil, nil); return }
             strongSelf.trim(toAge: ageLimit)
-            completion?(cache: strongSelf, key: nil, object: nil)
+            completion?(strongSelf, nil, nil)
         }
     }
     
@@ -336,7 +336,7 @@ public extension MemoryCache {
     /**
      Sync store an object for the unique key in memory cache and add object to linked list head
      */
-    public func set(object object: AnyObject, forKey key: String, cost: UInt = 0) {
+    public func set(object: AnyObject, forKey key: String, cost: UInt = 0) {
         _lock()
         _unsafeSet(object: object, forKey: key, cost: cost)
         _unlock()
@@ -346,7 +346,7 @@ public extension MemoryCache {
      Async search object according to unique key
      if find object, object will move to linked list head
      */
-    @warn_unused_result
+    
     public func object(forKey key: String) -> AnyObject? {
         var object: AnyObject? = nil
         _lock()
@@ -396,7 +396,7 @@ public extension MemoryCache {
     /**
      Sync trim memory cache objects which age greater than ageLimit
      */
-    public func trim(toAge ageLimit: NSTimeInterval) {
+    public func trim(toAge ageLimit: TimeInterval) {
         _lock()
         _unsafeTrim(toAge: ageLimit)
         _unlock()
@@ -422,11 +422,11 @@ public extension MemoryCache {
 }
 
 //  MARK: SequenceType
-extension MemoryCache : SequenceType {
+extension MemoryCache : Sequence {
     /**
      MemoryCacheGenerator
      */
-    public typealias Generator = MemoryCacheGenerator
+    public typealias Iterator = MemoryCacheGenerator
     
     /**
      Returns a generator over the elements of this sequence.
@@ -435,11 +435,11 @@ extension MemoryCache : SequenceType {
      
      - returns: A generator
      */
-    @warn_unused_result
-    public func generate() -> MemoryCacheGenerator {
+    
+    public func makeIterator() -> MemoryCacheGenerator {
         var generatror: MemoryCacheGenerator
         _lock()
-        generatror = MemoryCacheGenerator(generate: _cache.generate(), cache: self) {
+        generatror = MemoryCacheGenerator(generate: _cache.makeIterator(), cache: self) {
             self._unlock()
         }
         return generatror
@@ -450,19 +450,19 @@ extension MemoryCache : SequenceType {
 //  MARK: Private
 extension MemoryCache {
     
-    @objc private func _didReceiveMemoryWarningNotification() {
+    @objc fileprivate func _didReceiveMemoryWarningNotification() {
         if self.autoRemoveAllObjectWhenMemoryWarning {
             removeAllObjects(nil)
         }
     }
     
-    @objc private func _didEnterBackgroundNotification() {
+    @objc fileprivate func _didEnterBackgroundNotification() {
         if self.autoRemoveAllObjectWhenEnterBackground {
             removeAllObjects(nil)
         }
     }
     
-    private func _unsafeTrim(toCount countLimit: UInt) {
+    fileprivate func _unsafeTrim(toCount countLimit: UInt) {
         if _cache.count <= countLimit {
             return
         }
@@ -478,7 +478,7 @@ extension MemoryCache {
         }
     }
     
-    private func _unsafeTrim(toCost costLimit: UInt) {
+    fileprivate func _unsafeTrim(toCost costLimit: UInt) {
         if _cache.cost <= costLimit {
             return
         }
@@ -494,7 +494,7 @@ extension MemoryCache {
         }
     }
     
-    private func _unsafeTrim(toAge ageLimit: NSTimeInterval) {
+    fileprivate func _unsafeTrim(toAge ageLimit: TimeInterval) {
         if ageLimit <= 0 {
             _cache.removeAllObjects()
             return
@@ -508,7 +508,7 @@ extension MemoryCache {
         }
     }
     
-    func _unsafeSet(object object: AnyObject, forKey key: String, cost: UInt = 0) {
+    func _unsafeSet(object: AnyObject, forKey key: String, cost: UInt = 0) {
         _cache.set(object: MemoryCacheObject(key: key, value: object, cost: cost), forKey: key)
         if _cache.cost > _costLimit {
             _unsafeTrim(toCost: _costLimit)
@@ -518,11 +518,11 @@ extension MemoryCache {
         }
     }
     
-    private func _lock() {
-        dispatch_semaphore_wait(_semaphoreLock, DISPATCH_TIME_FOREVER)
+    fileprivate func _lock() {
+        _semaphoreLock.wait(timeout: DispatchTime.distantFuture)
     }
     
-    private func _unlock() {
-        dispatch_semaphore_signal(_semaphoreLock)
+    fileprivate func _unlock() {
+        _semaphoreLock.signal()
     }
 }
