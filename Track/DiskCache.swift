@@ -54,7 +54,7 @@ public protocol FastGeneratorType: IteratorProtocol {
  */
 open class DiskCacheGenerator : FastGeneratorType {
     
-    public typealias Element = (String, AnyObject)
+    public typealias Element = (String, Any)
     
     fileprivate var _lruGenerator: LRUGenerator<DiskCacheObject>
     
@@ -112,7 +112,7 @@ private class DiskCacheObject: LRUObject {
     }
 }
 
-public typealias DiskCacheAsyncCompletion = (_ cache: DiskCache?, _ key: String?, _ object: AnyObject?) -> Void
+public typealias DiskCacheAsyncCompletion = (_ cache: DiskCache?, _ key: String?, _ object: Any?) -> Void
 
 /**
  DiskCache is a thread safe cache implement by dispatch_semaphore_t lock and DISPATCH_QUEUE_CONCURRENT
@@ -218,7 +218,7 @@ open class DiskCache {
     
     fileprivate let _cache: LRU = LRU<DiskCacheObject>()
     
-    fileprivate let _queue: DispatchQueue = DispatchQueue(label: TrackCachePrefix + (String(describing: DiskCache)), attributes: DispatchQueue.Attributes.concurrent)
+    fileprivate let _queue: DispatchQueue = DispatchQueue(label: TrackCachePrefix + (String(describing: DiskCache.self)), attributes: DispatchQueue.Attributes.concurrent)
     
     fileprivate let _semaphoreLock: DispatchSemaphore = DispatchSemaphore(value: 1)
     
@@ -245,8 +245,8 @@ open class DiskCache {
         
         _lock()
         _queue.async {
-            self._createCacheDir()
-            self._loadFilesInfo()
+            _ = self._createCacheDir()
+            _ = self._loadFilesInfo()
             self._unlock()
         }
     }
@@ -361,14 +361,14 @@ public extension DiskCache {
      Sync store an object for the unique key in disk cache and store object info to linked list head
      */
     public func set(object: NSCoding, forKey key: String) {
-        let fileURL = _generateFileURL(key, path: cacheURL)
-        guard let filePath = fileURL.path else { return }
+        guard let fileURL = _generateFileURL(key, path: cacheURL) else { return }
+        let filePath = fileURL.path
         _lock()
         if NSKeyedArchiver.archiveRootObject(object, toFile: filePath) == true {
             do {
                 let date: Date = Date()
                 try FileManager.default.setAttributes([FileAttributeKey.modificationDate : date], ofItemAtPath: filePath)
-                let infosDic: [String : AnyObject] = try (fileURL as NSURL).resourceValues(forKeys: [URLResourceKey.totalFileAllocatedSizeKey]) as! [String : AnyObject]
+                let infosDic: [URLResourceKey : AnyObject] = try (fileURL as NSURL).resourceValues(forKeys: [URLResourceKey.totalFileAllocatedSizeKey]) as [URLResourceKey : AnyObject]
                 var fileSize: UInt = 0
                 if let fileSizeNumber = infosDic[URLResourceKey.totalFileAllocatedSizeKey] as? NSNumber {
                     fileSize = fileSizeNumber.uintValue
@@ -401,12 +401,13 @@ public extension DiskCache {
      Sync remove object according to unique key from disk and remove object info from linked list
      */
     public func removeObject(forKey key: String) {
-        guard let filePath = _generateFileURL(key, path: cacheURL).path else { return }
+        guard let fileURL = _generateFileURL(key, path: cacheURL) else { return }
+        let filePath = fileURL.path
         _lock()
         if FileManager.default.fileExists(atPath: filePath) {
             do {
                 try FileManager.default.removeItem(atPath: filePath)
-                _cache.removeObject(forKey: key)
+                _ = _cache.removeObject(forKey: key)
             } catch {}
         }
         _unlock()
@@ -532,12 +533,12 @@ private extension DiskCache {
     
     func _loadFilesInfo() -> Bool {
         var fileInfos: [DiskCacheObject] = [DiskCacheObject]()
-        let fileInfoKeys: [String] = [URLResourceKey.contentModificationDateKey.rawValue, URLResourceKey.totalFileAllocatedSizeKey.rawValue]
+        let fileInfoKeys: [URLResourceKey] = [URLResourceKey.contentModificationDateKey, URLResourceKey.totalFileAllocatedSizeKey]
         do {
             let filesURL: [URL] = try FileManager.default.contentsOfDirectory(at: cacheURL, includingPropertiesForKeys: fileInfoKeys, options: .skipsHiddenFiles)
             for fileURL: URL in filesURL {
                 do {
-                    let infosDic: [String : AnyObject] = try (fileURL as NSURL).resourceValues(forKeys: fileInfoKeys as! [URLResourceKey])
+                    let infosDic: [URLResourceKey : AnyObject] = try (fileURL as NSURL).resourceValues(forKeys: fileInfoKeys) as [URLResourceKey : AnyObject]
                     
                     if let key = fileURL.lastPathComponent as String?,
                         let date = infosDic[URLResourceKey.contentModificationDateKey] as? Date,
@@ -562,9 +563,9 @@ private extension DiskCache {
     func _unsafeTrim(toCount countLimit: UInt) {
         if var lastObject: DiskCacheObject = _cache.lastObject() {
             while (_cache.count > countLimit) {
-                if let filePath = _generateFileURL(lastObject.key, path: cacheURL).path , FileManager.default.fileExists(atPath: filePath) {
+                if let fileURL = _generateFileURL(lastObject.key, path: cacheURL), FileManager.default.fileExists(atPath: fileURL.path) {
                     do {
-                        try FileManager.default.removeItem(atPath: filePath)
+                        try FileManager.default.removeItem(atPath: fileURL.path)
                         _cache.removeLastObject()
                         guard let newLastObject = _cache.lastObject() else { break }
                         lastObject = newLastObject
@@ -577,9 +578,9 @@ private extension DiskCache {
     func _unsafeTrim(toCost costLimit: UInt) {
         if var lastObject: DiskCacheObject = _cache.lastObject() {
             while (_cache.cost > costLimit) {
-                if let filePath = _generateFileURL(lastObject.key, path: cacheURL).path , FileManager.default.fileExists(atPath: filePath) {
+                if let fileURL = _generateFileURL(lastObject.key, path: cacheURL) , FileManager.default.fileExists(atPath: fileURL.path) {
                     do {
-                        try FileManager.default.removeItem(atPath: filePath)
+                        try FileManager.default.removeItem(atPath: fileURL.path)
                         _cache.removeLastObject()
                         guard let newLastObject = _cache.lastObject() else { break }
                         lastObject = newLastObject
@@ -592,9 +593,9 @@ private extension DiskCache {
     func _unsafeTrim(toAge ageLimit: TimeInterval) {
         if var lastObject: DiskCacheObject = _cache.lastObject() {
             while (lastObject.date.timeIntervalSince1970 < Date().timeIntervalSince1970 - ageLimit) {
-                if let filePath = _generateFileURL(lastObject.key, path: cacheURL).path , FileManager.default.fileExists(atPath: filePath) {
+                if let fileURL = _generateFileURL(lastObject.key, path: cacheURL) , FileManager.default.fileExists(atPath: fileURL.path) {
                     do {
-                        try FileManager.default.removeItem(atPath: filePath)
+                        try FileManager.default.removeItem(atPath: fileURL.path)
                         _cache.removeLastObject()
                         guard let newLastObject = _cache.lastObject() else { break }
                         lastObject = newLastObject
@@ -605,13 +606,13 @@ private extension DiskCache {
     }
     
     func _unsafeObject(forKey key: String) -> AnyObject? {
-        guard let filePath = _generateFileURL(key, path: cacheURL).path else { return nil }
+        guard let fileURL = _generateFileURL(key, path: cacheURL) else { return nil }
         var object: AnyObject? = nil
         let date: Date = Date()
-        if FileManager.default.fileExists(atPath: filePath) {
-            object = NSKeyedUnarchiver.unarchiveObject(withFile: filePath)
+        if FileManager.default.fileExists(atPath: fileURL.path) {
+            object = NSKeyedUnarchiver.unarchiveObject(withFile: fileURL.path) as AnyObject?
             do {
-                try FileManager.default.setAttributes([FileAttributeKey.modificationDate : date], ofItemAtPath: filePath)
+                try FileManager.default.setAttributes([FileAttributeKey.modificationDate : date], ofItemAtPath: fileURL.path)
                 if object != nil {
                     if let diskCacheObj = _cache.object(forKey: key) {
                         diskCacheObj.date = date
@@ -624,12 +625,12 @@ private extension DiskCache {
         return object
     }
     
-    func _generateFileURL(_ key: String, path: URL) -> URL {
+    func _generateFileURL(_ key: String, path: URL) -> URL? {
         return path.appendingPathComponent(key)
     }
     
     func _lock() {
-        _semaphoreLock.wait(timeout: DispatchTime.distantFuture)
+        _ = _semaphoreLock.wait(timeout: DispatchTime.distantFuture)
     }
     
     func _unlock() {

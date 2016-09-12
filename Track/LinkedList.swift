@@ -151,7 +151,7 @@ class LRU<T: LRUObject> {
             if let newValue = newValue {
                 set(object: newValue, forKey: key)
             } else {
-                removeObject(forKey: key)
+                _ = removeObject(forKey: key)
             }
         }
     }
@@ -299,7 +299,7 @@ private class LinkedList<T> {
         }
         else {
             node = tailNode
-            for _ in 1 ... count - index - 1 {
+            for _ in 1 ... count - (index - 1) {
                 node = node?.preNode
             }
         }

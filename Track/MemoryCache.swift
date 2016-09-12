@@ -220,7 +220,7 @@ open class MemoryCache {
     
     fileprivate let _cache: LRU = LRU<MemoryCacheObject>()
     
-    fileprivate let _queue: DispatchQueue = DispatchQueue(label: TrackCachePrefix + String(describing: MemoryCache), attributes: DispatchQueue.Attributes.concurrent)
+    fileprivate let _queue: DispatchQueue = DispatchQueue(label: TrackCachePrefix + String(describing: MemoryCache.self), attributes: DispatchQueue.Attributes.concurrent)
     
     fileprivate let _semaphoreLock: DispatchSemaphore = DispatchSemaphore(value: 1)
     
@@ -362,7 +362,7 @@ public extension MemoryCache {
      */
     public func removeObject(forKey key: String) {
         _lock()
-        _cache.removeObject(forKey:key)
+        _ = _cache.removeObject(forKey:key)
         _unlock()
     }
     
@@ -519,7 +519,7 @@ extension MemoryCache {
     }
     
     fileprivate func _lock() {
-        _semaphoreLock.wait(timeout: DispatchTime.distantFuture)
+        _ = _semaphoreLock.wait(timeout: DispatchTime.distantFuture)
     }
     
     fileprivate func _unlock() {

@@ -55,7 +55,7 @@ open class CacheGenerator : IteratorProtocol {
             return element
         }
         else {
-            if let element: Element = _diskCacheGenerator.next() {
+            if let element: Element = _diskCacheGenerator.next() as! CacheGenerator.Element? {
                 _memoryCache._unsafeSet(object: element.1, forKey: element.0)
                 return element
             }
@@ -67,7 +67,7 @@ open class CacheGenerator : IteratorProtocol {
 /**
  Cache async operation callback
  */
-public typealias CacheAsyncCompletion = (_ cache: Cache?, _ key: String?, _ object: AnyObject?) -> Void
+public typealias CacheAsyncCompletion = (_ cache: Cache?, _ key: String?, _ object: Any?) -> Void
 
 /**
  Track Cache Prefix, use on default disk cache folder name and queue name
@@ -100,7 +100,7 @@ open class Cache {
      */
     open let diskCache: DiskCache
     
-    fileprivate let _queue: DispatchQueue = DispatchQueue(label: TrackCachePrefix + (String(describing: Cache)), attributes: DispatchQueue.Attributes.concurrent)
+    fileprivate let _queue: DispatchQueue = DispatchQueue(label: TrackCachePrefix + (String(describing: Cache.self)), attributes: DispatchQueue.Attributes.concurrent)
     
     /**
      A share cache, contain a thread safe memory cache and a thread safe diskcache
