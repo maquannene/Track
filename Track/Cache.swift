@@ -25,19 +25,19 @@ import Foundation
 /**
  CacheGenerator, support `for...in` loops, it is thread safe.
  */
-public class CacheGenerator : GeneratorType {
+open class CacheGenerator : IteratorProtocol {
     
     public typealias Element = (String, AnyObject)
     
-    private var _memoryCacheGenerator: MemoryCacheGenerator
+    fileprivate var _memoryCacheGenerator: MemoryCacheGenerator
     
-    private var _diskCacheGenerator: DiskCacheGenerator
+    fileprivate var _diskCacheGenerator: DiskCacheGenerator
     
-    private var _memoryCache: MemoryCache
+    fileprivate var _memoryCache: MemoryCache
     
-    private let _semaphoreLock: dispatch_semaphore_t = dispatch_semaphore_create(1)
+    fileprivate let _semaphoreLock: DispatchSemaphore = DispatchSemaphore(value: 1)
     
-    private init(memoryCacheGenerator: MemoryCacheGenerator, diskCacheGenerator: DiskCacheGenerator, memoryCache: MemoryCache) {
+    fileprivate init(memoryCacheGenerator: MemoryCacheGenerator, diskCacheGenerator: DiskCacheGenerator, memoryCache: MemoryCache) {
         self._memoryCacheGenerator = memoryCacheGenerator
         self._diskCacheGenerator = diskCacheGenerator
         self._memoryCache = memoryCache
@@ -48,14 +48,14 @@ public class CacheGenerator : GeneratorType {
      
      - returns: next element
      */
-    @warn_unused_result
-    public func next() -> Element? {
+    
+    open func next() -> Element? {
         if let element = _memoryCacheGenerator.next() {
             self._diskCacheGenerator.shift()
             return element
         }
         else {
-            if let element: Element = _diskCacheGenerator.next() {
+            if let element: Element = _diskCacheGenerator.next() as! CacheGenerator.Element? {
                 _memoryCache._unsafeSet(object: element.1, forKey: element.0)
                 return element
             }
@@ -67,7 +67,7 @@ public class CacheGenerator : GeneratorType {
 /**
  Cache async operation callback
  */
-public typealias CacheAsyncCompletion = (cache: Cache?, key: String?, object: AnyObject?) -> Void
+public typealias CacheAsyncCompletion = (_ cache: Cache?, _ key: String?, _ object: Any?) -> Void
 
 /**
  Track Cache Prefix, use on default disk cache folder name and queue name
@@ -83,29 +83,29 @@ let TrackCacheDefauleName: String = "defauleTrackCache"
  TrackCache is a thread safe cache, contain a thread safe memory cache and a thread safe diskcache.
  And support thread safe `for`...`in` loops, map, forEach...
  */
-public class Cache {
+open class Cache {
     
     /**
      cache name, used to create disk cache folder
      */
-    public let name: String
+    open let name: String
     
     /**
      Thread safe memeory cache
      */
-    public let memoryCache: MemoryCache
+    open let memoryCache: MemoryCache
     
     /**
      Thread safe disk cache
      */
-    public let diskCache: DiskCache
+    open let diskCache: DiskCache
     
-    private let _queue: dispatch_queue_t = dispatch_queue_create(TrackCachePrefix + (String(Cache)), DISPATCH_QUEUE_CONCURRENT)
+    fileprivate let _queue: DispatchQueue = DispatchQueue(label: TrackCachePrefix + (String(describing: Cache.self)), attributes: DispatchQueue.Attributes.concurrent)
     
     /**
      A share cache, contain a thread safe memory cache and a thread safe diskcache
      */
-    public static let shareInstance = Cache(name: TrackCacheDefauleName)!
+    open static let shareInstance = Cache(name: TrackCacheDefauleName)!
     
     /**
      Design constructor
@@ -129,7 +129,7 @@ public class Cache {
      - parameter name: cache name
      */
     public convenience init?(name: String){
-        self.init(name: name, path: NSSearchPathForDirectoriesInDomains(.CachesDirectory, .UserDomainMask, true)[0])
+        self.init(name: name, path: NSSearchPathForDirectoriesInDomains(.cachesDirectory, .userDomainMask, true)[0])
     }
 }
 
@@ -145,12 +145,12 @@ public extension Cache {
      - parameter key:        unique key
      - parameter completion: stroe completion call back
      */
-    public func set(object object: NSCoding, forKey key: String, completion: CacheAsyncCompletion?) {
+    public func set(object: NSCoding, forKey key: String, completion: CacheAsyncCompletion?) {
         _asyncGroup(2, operation: { completion in
             self.memoryCache.set(object: object, forKey: key) { _, _, _ in completion?() }
             self.diskCache.set(object: object, forKey: key) { _, _, _ in completion?() }
         }, notifyQueue: _queue) { [weak self] in
-            completion?(cache: self, key: key, object: object)
+            completion?(self, key, object)
         }
     }
     
@@ -162,23 +162,23 @@ public extension Cache {
      - parameter completion: search completion call back
      */
     public func object(forKey key: String, completion: CacheAsyncCompletion?) {
-        dispatch_async(_queue) { [weak self] in
+        _queue.async { [weak self] in
             guard let strongSelf = self else { return }
             strongSelf.memoryCache.object(forKey: key) { [weak self] (memCache, memKey, memObject) in
                 guard let strongSelf = self else { return }
                 if memObject != nil {
-                    dispatch_async(strongSelf._queue) { [weak self] in
-                        completion?(cache: self, key: memKey, object: memObject)
+                    strongSelf._queue.async { [weak self] in
+                        completion?(self, memKey, memObject)
                     }
                 }
                 else {
                     strongSelf.diskCache.object(forKey: key) { [weak self] (diskCache, diskKey, diskObject) in
                         guard let strongSelf = self else { return }
-                        if let diskKey = diskKey, diskCache = diskCache {
+                        if let diskKey = diskKey, let diskCache = diskCache {
                             strongSelf.memoryCache.set(object: diskCache, forKey: diskKey, completion: nil)
                         }
-                        dispatch_async(strongSelf._queue) { [weak self] in
-                            completion?(cache: self, key: diskKey, object: diskObject)
+                        strongSelf._queue.async { [weak self] in
+                            completion?(self, diskKey, diskObject)
                         }
                     }
                 }
@@ -197,7 +197,7 @@ public extension Cache {
             self.memoryCache.removeObject(forKey: key) { _, _, _ in completion?() }
             self.diskCache.removeObject(forKey: key) { _, _, _ in completion?() }
         }, notifyQueue: _queue) { [weak self] in
-            completion?(cache: self, key: key, object: nil)
+            completion?(self, key, nil)
         }
     }
     
@@ -206,12 +206,12 @@ public extension Cache {
      
      - parameter completion: remove completion call back
      */
-    public func removeAllObjects(completion: CacheAsyncCompletion?) {
+    public func removeAllObjects(_ completion: CacheAsyncCompletion?) {
         _asyncGroup(2, operation: { completion in
             self.memoryCache.removeAllObjects { _, _, _ in completion?() }
             self.diskCache.removeAllObjects { _, _, _ in completion?() }
         }, notifyQueue: _queue) { [weak self] in
-            completion?(cache: self, key: nil, object: nil)
+            completion?(self, nil, nil)
         }
     }
     
@@ -223,7 +223,7 @@ public extension Cache {
      - parameter key:        unique key
      - parameter completion: stroe completion call back
      */
-    public func set(object object: NSCoding, forKey key: String) {
+    public func set(object: NSCoding, forKey key: String) {
         memoryCache.set(object: object, forKey: key)
         diskCache.set(object: object, forKey: key)
     }
@@ -235,7 +235,7 @@ public extension Cache {
      - parameter key:        object unique key
      - parameter completion: search completion call back
      */
-    @warn_unused_result
+    
     public func object(forKey key: String) -> AnyObject? {
         if let object = memoryCache.object(forKey: key) {
             return object
@@ -291,11 +291,11 @@ public extension Cache {
 }
 
 //  MARK: SequenceType
-extension Cache : SequenceType {
+extension Cache : Sequence {
     /**
      CacheGenerator
      */
-    public typealias Generator = CacheGenerator
+    public typealias Iterator = CacheGenerator
     
     /**
      Returns a generator over the elements of this sequence.
@@ -304,10 +304,10 @@ extension Cache : SequenceType {
      
      - returns: A generator
      */
-    @warn_unused_result
-    public func generate() -> CacheGenerator {
+    
+    public func makeIterator() -> CacheGenerator {
         var generatror: CacheGenerator
-        generatror = CacheGenerator(memoryCacheGenerator: memoryCache.generate(), diskCacheGenerator: diskCache.generate(), memoryCache: memoryCache)
+        generatror = CacheGenerator(memoryCacheGenerator: memoryCache.makeIterator(), diskCacheGenerator: diskCache.makeIterator(), memoryCache: memoryCache)
         return generatror
     }
 }
@@ -316,28 +316,28 @@ extension Cache : SequenceType {
 //  MARK: Pirvate
 private extension Cache {
     
-    private typealias OperationCompeltion = () -> Void
+    typealias OperationCompeltion = () -> Void
     
-    private func _asyncGroup(asyncNumber: Int,
-                             operation: OperationCompeltion? -> Void,
-                             notifyQueue: dispatch_queue_t,
+    func _asyncGroup(_ asyncNumber: Int,
+                             operation: (OperationCompeltion?) -> Void,
+                             notifyQueue: DispatchQueue,
                              completion: (() -> Void)?) {
-        var group: dispatch_group_t? = nil
+        var group: DispatchGroup? = nil
         var operationCompletion: OperationCompeltion?
         if (completion != nil) {
-            group = dispatch_group_create()
+            group = DispatchGroup()
             for _ in 0 ..< asyncNumber {
-                group = dispatch_group_create()
+                group = DispatchGroup()
             }
             operationCompletion = {
-                dispatch_group_leave(group!)
+                group!.leave()
             }
         }
         
         operation(operationCompletion)
         
         if let group = group {
-            dispatch_group_notify(group, _queue) {
+            group.notify(queue: _queue) {
                 completion?()
             }
         }
