@@ -310,35 +310,3 @@ extension Cache : Sequence {
         return generatror
     }
 }
-
-//  MARK:
-//  MARK: Private
-private extension Cache {
-    
-    typealias OperationCompletion = () -> Void
-    
-    func _asyncGroup(_ asyncNumber: Int,
-                             operation: (OperationCompletion?) -> Void,
-                             notifyQueue: DispatchQueue,
-                             completion: (() -> Void)?) {
-        var group: DispatchGroup? = nil
-        var operationCompletion: OperationCompletion?
-        if (completion != nil) {
-            group = DispatchGroup()
-            for _ in 0 ..< asyncNumber {
-                group!.enter()
-            }
-            operationCompletion = {
-                group!.leave()
-            }
-        }
-        
-        operation(operationCompletion)
-        
-        if let group = group {
-            group.notify(queue: _queue) {
-                completion?()
-            }
-        }
-    }
-}
