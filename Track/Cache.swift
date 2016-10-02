@@ -77,7 +77,7 @@ let TrackCachePrefix: String = "com.trackcache."
 /**
  Track Cache default name, default disk cache folder name
  */
-let TrackCacheDefauleName: String = "defauleTrackCache"
+let TrackCacheDefauleName: String = "defaultTrackCache"
 
 /**
  TrackCache is a thread safe cache, contain a thread safe memory cache and a thread safe diskcache.
@@ -146,13 +146,12 @@ public extension Cache {
      - parameter completion: stroe completion call back
      */
     public func set(object: NSCoding, forKey key: String, completion: CacheAsyncCompletion?) {
-        _asyncGroup(2, operation: { completion in
-            self.memoryCache.set(object: object, forKey: key) { _, _, _ in completion?() }
-            self.diskCache.set(object: object, forKey: key) { _, _, _ in completion?() }
-        }, notifyQueue: _queue) { [weak self] in
-            completion?(self, key, object)
+        _queue.async { [weak self] in
+            guard let strongSelf = self else { completion?(nil, key, object); return }
+            strongSelf.set(object: object, forKey: key)
+            completion?(strongSelf, key, object)
         }
-    }
+     }
     
     /**
      Async search object according to unique key
@@ -193,12 +192,12 @@ public extension Cache {
      - parameter completion: remove completion call back
      */
     public func removeObject(forKey key: String, completion: CacheAsyncCompletion?) {
-        _asyncGroup(2, operation: { completion in
-            self.memoryCache.removeObject(forKey: key) { _, _, _ in completion?() }
-            self.diskCache.removeObject(forKey: key) { _, _, _ in completion?() }
-        }, notifyQueue: _queue) { [weak self] in
-            completion?(self, key, nil)
+        _queue.async { [weak self] in
+            guard let strongSelf = self else { completion?(nil, key, nil); return }
+            strongSelf.removeObject(forKey: key)
+            completion?(strongSelf, key, nil)
         }
+
     }
     
     /**
@@ -207,12 +206,12 @@ public extension Cache {
      - parameter completion: remove completion call back
      */
     public func removeAllObjects(_ completion: CacheAsyncCompletion?) {
-        _asyncGroup(2, operation: { completion in
-            self.memoryCache.removeAllObjects { _, _, _ in completion?() }
-            self.diskCache.removeAllObjects { _, _, _ in completion?() }
-        }, notifyQueue: _queue) { [weak self] in
-            completion?(self, nil, nil)
+        _queue.async { [weak self] in
+            guard let strongSelf = self else { completion?(nil, nil, nil); return }
+            strongSelf.removeAllObjects()
+            completion?(strongSelf, nil, nil)
         }
+
     }
     
     //  MARK: Sync
@@ -309,37 +308,5 @@ extension Cache : Sequence {
         var generatror: CacheGenerator
         generatror = CacheGenerator(memoryCacheGenerator: memoryCache.makeIterator(), diskCacheGenerator: diskCache.makeIterator(), memoryCache: memoryCache)
         return generatror
-    }
-}
-
-//  MARK:
-//  MARK: Pirvate
-private extension Cache {
-    
-    typealias OperationCompeltion = () -> Void
-    
-    func _asyncGroup(_ asyncNumber: Int,
-                             operation: (OperationCompeltion?) -> Void,
-                             notifyQueue: DispatchQueue,
-                             completion: (() -> Void)?) {
-        var group: DispatchGroup? = nil
-        var operationCompletion: OperationCompeltion?
-        if (completion != nil) {
-            group = DispatchGroup()
-            for _ in 0 ..< asyncNumber {
-                group = DispatchGroup()
-            }
-            operationCompletion = {
-                group!.leave()
-            }
-        }
-        
-        operation(operationCompletion)
-        
-        if let group = group {
-            group.notify(queue: _queue) {
-                completion?()
-            }
-        }
     }
 }
