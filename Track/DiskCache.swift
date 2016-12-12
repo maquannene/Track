@@ -418,9 +418,9 @@ public extension DiskCache {
      */
     public func removeAllObjects() {
         _lock()
-        if FileManager.default.fileExists(atPath: self.cacheURL.absoluteString) {
+        if FileManager.default.fileExists(atPath: self.cacheURL.path) {
             do {
-                try FileManager.default.removeItem(atPath: self.cacheURL.absoluteString)
+                try FileManager.default.removeItem(atPath: self.cacheURL.path)
                 _cache.removeAllObjects()
             } catch {}
         }
@@ -520,11 +520,11 @@ extension DiskCache : Sequence {
 private extension DiskCache {
 
     func _createCacheDir() -> Bool {
-        if FileManager.default.fileExists(atPath: cacheURL.absoluteString) {
+        if FileManager.default.fileExists(atPath: cacheURL.path) {
             return false
         }
         do {
-            try FileManager.default.createDirectory(atPath: cacheURL.absoluteString, withIntermediateDirectories: true, attributes: nil)
+            try FileManager.default.createDirectory(atPath: cacheURL.path, withIntermediateDirectories: true, attributes: nil)
         } catch {
             return false
         }

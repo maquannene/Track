@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
 s.name         = 'Track'
 s.summary      = 'Track is a thread safe cache write by Swift. Composed of DiskCache and MemoryCache which support LRU.'
-s.version      = '2.0.0'
+s.version      = '2.0.1'
 s.license      = { :type => 'MIT', :file => 'LICENSE' }
 s.authors      = { 'maquannene' => 'maquan@wps.cn' }
 s.homepage     = 'https://github.com/maquannene/Track'
