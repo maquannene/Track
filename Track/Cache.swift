@@ -88,24 +88,24 @@ open class Cache {
     /**
      cache name, used to create disk cache folder
      */
-    open let name: String
+    public let name: String
     
     /**
      Thread safe memeory cache
      */
-    open let memoryCache: MemoryCache
+    public let memoryCache: MemoryCache
     
     /**
      Thread safe disk cache
      */
-    open let diskCache: DiskCache
+    public let diskCache: DiskCache
     
     fileprivate let _queue: DispatchQueue = DispatchQueue(label: TrackCachePrefix + (String(describing: Cache.self)), attributes: DispatchQueue.Attributes.concurrent)
     
     /**
      A share cache, contain a thread safe memory cache and a thread safe diskcache
      */
-    open static let shareInstance = Cache(name: TrackCacheDefauleName)!
+    public static let shareInstance = Cache(name: TrackCacheDefauleName)!
     
     /**
      Design constructor
@@ -115,7 +115,7 @@ open class Cache {
      - parameter path: diskcache path
      */
     public init?(name: String, path: String) {
-        if name.characters.count == 0 || path.characters.count == 0 {
+        if name.count == 0 || path.count == 0 {
             return nil
         }
         self.diskCache = DiskCache(name: name, path: path)!
@@ -145,7 +145,7 @@ public extension Cache {
      - parameter key:        unique key
      - parameter completion: stroe completion call back
      */
-    public func set(object: NSCoding, forKey key: String, completion: CacheAsyncCompletion?) {
+    func set(object: NSCoding, forKey key: String, completion: CacheAsyncCompletion?) {
         _queue.async { [weak self] in
             guard let strongSelf = self else { completion?(nil, key, object); return }
             strongSelf.set(object: object, forKey: key)
@@ -160,7 +160,7 @@ public extension Cache {
      - parameter key:        object unique key
      - parameter completion: search completion call back
      */
-    public func object(forKey key: String, completion: CacheAsyncCompletion?) {
+    func object(forKey key: String, completion: CacheAsyncCompletion?) {
         _queue.async { [weak self] in
             guard let strongSelf = self else { return }
             strongSelf.memoryCache.object(forKey: key) { [weak self] (memCache, memKey, memObject) in
@@ -191,7 +191,7 @@ public extension Cache {
      - parameter key:        object unique key
      - parameter completion: remove completion call back
      */
-    public func removeObject(forKey key: String, completion: CacheAsyncCompletion?) {
+    func removeObject(forKey key: String, completion: CacheAsyncCompletion?) {
         _queue.async { [weak self] in
             guard let strongSelf = self else { completion?(nil, key, nil); return }
             strongSelf.removeObject(forKey: key)
@@ -205,7 +205,7 @@ public extension Cache {
      
      - parameter completion: remove completion call back
      */
-    public func removeAllObjects(_ completion: CacheAsyncCompletion?) {
+    func removeAllObjects(_ completion: CacheAsyncCompletion?) {
         _queue.async { [weak self] in
             guard let strongSelf = self else { completion?(nil, nil, nil); return }
             strongSelf.removeAllObjects()
@@ -222,7 +222,7 @@ public extension Cache {
      - parameter key:        unique key
      - parameter completion: stroe completion call back
      */
-    public func set(object: NSCoding, forKey key: String) {
+    func set(object: NSCoding, forKey key: String) {
         memoryCache.set(object: object, forKey: key)
         diskCache.set(object: object, forKey: key)
     }
@@ -235,7 +235,7 @@ public extension Cache {
      - parameter completion: search completion call back
      */
     
-    public func object(forKey key: String) -> AnyObject? {
+    func object(forKey key: String) -> AnyObject? {
         if let object = memoryCache.object(forKey: key) {
             return object
         }
@@ -253,7 +253,7 @@ public extension Cache {
      
      - parameter key:        object unique key
      */
-    public func removeObject(forKey key: String) {
+    func removeObject(forKey key: String) {
         memoryCache.removeObject(forKey: key)
         diskCache.removeObject(forKey: key)
     }
@@ -261,7 +261,7 @@ public extension Cache {
     /**
      Sync remove all objects
      */
-    public func removeAllObjects() {
+    func removeAllObjects() {
         memoryCache.removeAllObjects()
         diskCache.removeAllObjects()
     }
@@ -271,7 +271,7 @@ public extension Cache {
      
      - parameter key: object unique key
      */
-    public subscript(key: String) -> NSCoding? {
+    subscript(key: String) -> NSCoding? {
         get {
             if let returnValue = object(forKey: key) as? NSCoding {
                 return returnValue

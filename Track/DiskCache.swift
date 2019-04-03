@@ -125,12 +125,12 @@ open class DiskCache {
     /**
      DiskCache folder name
      */
-    open let name: String
+    public let name: String
     
     /**
      DiskCache folder path URL
      */
-    open let cacheURL: URL
+    public let cacheURL: URL
     
     /**
      Disk cache object total count
@@ -196,7 +196,7 @@ open class DiskCache {
         }
     }
     
-    fileprivate var _ageLimit: TimeInterval = DBL_MAX
+    fileprivate var _ageLimit: TimeInterval = Double.greatestFiniteMagnitude
     
     /**
      Disk cache object age limit
@@ -225,7 +225,7 @@ open class DiskCache {
     /**
      A share disk cache, name "defauleTrackCache" path "Library/Caches/"
      */
-    open static let shareInstance = DiskCache(name: TrackCacheDefauleName)!
+    public static let shareInstance = DiskCache(name: TrackCacheDefauleName)!
     
     /**
      Design constructor
@@ -237,7 +237,7 @@ open class DiskCache {
      - returns: if no name or path will be fail
      */
     public init?(name: String, path: String) {
-        if name.characters.count == 0 || path.characters.count == 0 {
+        if name.count == 0 || path.count == 0 {
             return nil
         }
         self.name = name
@@ -275,7 +275,7 @@ public extension DiskCache {
      - parameter key:        unique key
      - parameter completion: stroe completion call back
      */
-    public func set(object: NSCoding, forKey key: String, completion: DiskCacheAsyncCompletion?) {
+    func set(object: NSCoding, forKey key: String, completion: DiskCacheAsyncCompletion?) {
         _queue.async { [weak self] in
             guard let strongSelf = self else { completion?(nil, key, object); return }
             strongSelf.set(object: object, forKey: key)
@@ -287,7 +287,7 @@ public extension DiskCache {
      Async search object according to unique key
      if find object, object info will move to linked list head
      */
-    public func object(forKey key: String, completion: DiskCacheAsyncCompletion?) {
+    func object(forKey key: String, completion: DiskCacheAsyncCompletion?) {
         _queue.async { [weak self] in
             guard let strongSelf = self else { completion?(nil, key, nil); return }
             let object = strongSelf.object(forKey: key)
@@ -298,7 +298,7 @@ public extension DiskCache {
     /**
      Async remove object according to unique key from disk and remove object info from linked list
      */
-    public func removeObject(forKey key: String, completion: DiskCacheAsyncCompletion?) {
+    func removeObject(forKey key: String, completion: DiskCacheAsyncCompletion?) {
         _queue.async { [weak self] in
             guard let strongSelf = self else { completion?(nil, key, nil); return }
             strongSelf.removeObject(forKey: key)
@@ -309,7 +309,7 @@ public extension DiskCache {
     /**
      Async remove all object and info from disk and linked list
      */
-    public func removeAllObjects(_ completion: DiskCacheAsyncCompletion?) {
+    func removeAllObjects(_ completion: DiskCacheAsyncCompletion?) {
         _queue.async { [weak self] in
             guard let strongSelf = self else { completion?(nil, nil, nil); return }
             strongSelf.removeAllObjects()
@@ -322,7 +322,7 @@ public extension DiskCache {
      
      - parameter countLimit: maximum countLimit
      */
-    public func trim(toCount countLimit: UInt, completion: DiskCacheAsyncCompletion?) {
+    func trim(toCount countLimit: UInt, completion: DiskCacheAsyncCompletion?) {
         _queue.async { [weak self] in
             guard let strongSelf = self else { completion?(nil, nil, nil); return }
             strongSelf.trim(toCount: countLimit)
@@ -335,7 +335,7 @@ public extension DiskCache {
      
      - parameter costLimit:  maximum costLimit
      */
-    public func trim(toCost costLimit: UInt, completion: DiskCacheAsyncCompletion?) {
+    func trim(toCost costLimit: UInt, completion: DiskCacheAsyncCompletion?) {
         _queue.async { [weak self] in
             guard let strongSelf = self else { completion?(nil, nil, nil); return }
             strongSelf.trim(toCost: costLimit)
@@ -348,7 +348,7 @@ public extension DiskCache {
      
      - parameter ageLimit:  maximum ageLimit
      */
-    public func trim(toAge ageLimit: TimeInterval, completion: DiskCacheAsyncCompletion?) {
+    func trim(toAge ageLimit: TimeInterval, completion: DiskCacheAsyncCompletion?) {
         _queue.async { [weak self] in
             guard let strongSelf = self else { completion?(nil, nil, nil); return }
             strongSelf.trim(toAge: ageLimit)
@@ -360,7 +360,7 @@ public extension DiskCache {
     /**
      Sync store an object for the unique key in disk cache and store object info to linked list head
      */
-    public func set(object: NSCoding, forKey key: String) {
+    func set(object: NSCoding, forKey key: String) {
         guard let fileURL = _generateFileURL(key, path: cacheURL) else { return }
         let filePath = fileURL.path
         _lock()
@@ -390,7 +390,7 @@ public extension DiskCache {
      if find object, object info will move to linked list head
      */
     
-    public func object(forKey key: String) -> AnyObject? {
+    func object(forKey key: String) -> AnyObject? {
         _lock()
         let object = _unsafeObject(forKey: key)
         _unlock()
@@ -400,7 +400,7 @@ public extension DiskCache {
     /**
      Sync remove object according to unique key from disk and remove object info from linked list
      */
-    public func removeObject(forKey key: String) {
+    func removeObject(forKey key: String) {
         guard let fileURL = _generateFileURL(key, path: cacheURL) else { return }
         let filePath = fileURL.path
         _lock()
@@ -416,7 +416,7 @@ public extension DiskCache {
     /**
      Sync remove all object and info from disk and linked list
      */
-    public func removeAllObjects() {
+    func removeAllObjects() {
         _lock()
         if FileManager.default.fileExists(atPath: self.cacheURL.path) {
             do {
@@ -430,7 +430,7 @@ public extension DiskCache {
     /**
      Async trim disk cache total to countLimit according LRU
      */
-    public func trim(toCount countLimit: UInt) {
+    func trim(toCount countLimit: UInt) {
         if self.totalCount <= countLimit {
             return
         }
@@ -446,7 +446,7 @@ public extension DiskCache {
     /**
      Sync trim disk cache totalcost to costLimit according LRU
      */
-    public func trim(toCost costLimit: UInt) {
+    func trim(toCost costLimit: UInt) {
         if self.totalCost <= costLimit {
             return
         }
@@ -462,7 +462,7 @@ public extension DiskCache {
     /**
      Sync trim disk cache objects which age greater than ageLimit
      */
-    public func trim(toAge ageLimit: TimeInterval) {
+    func trim(toAge ageLimit: TimeInterval) {
         if ageLimit <= 0 {
             removeAllObjects()
             return
@@ -472,7 +472,7 @@ public extension DiskCache {
         _unlock()
     }
     
-    public subscript(key: String) -> NSCoding? {
+    subscript(key: String) -> NSCoding? {
         get {
             if let returnValue = object(forKey: key) as? NSCoding {
                 return returnValue

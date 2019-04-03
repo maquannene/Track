@@ -160,7 +160,7 @@ open class MemoryCache {
         }
     }
     
-    fileprivate var _ageLimit: TimeInterval = DBL_MAX
+    fileprivate var _ageLimit: TimeInterval = Double.greatestFiniteMagnitude
     
     /**
      Memory cache object age limit
@@ -227,14 +227,14 @@ open class MemoryCache {
     /**
      A share memory cache
      */
-    open static let shareInstance = MemoryCache()
+    public static let shareInstance = MemoryCache()
     
     /**
      Design constructor
      */
     public init () {
-        NotificationCenter.default.addObserver(self, selector: #selector(MemoryCache._didReceiveMemoryWarningNotification), name: NSNotification.Name.UIApplicationDidReceiveMemoryWarning, object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(MemoryCache._didEnterBackgroundNotification), name: NSNotification.Name.UIApplicationDidEnterBackground, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(MemoryCache._didReceiveMemoryWarningNotification), name: UIApplication.didReceiveMemoryWarningNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(MemoryCache._didEnterBackgroundNotification), name: UIApplication.didEnterBackgroundNotification, object: nil)
     }
 }
 
@@ -251,7 +251,7 @@ public extension MemoryCache {
      - parameter key:        unique key
      - parameter completion: stroe completion call back
      */
-    public func set(object: AnyObject, forKey key: String, cost: UInt = 0, completion: MemoryCacheAsyncCompletion?) {
+    func set(object: AnyObject, forKey key: String, cost: UInt = 0, completion: MemoryCacheAsyncCompletion?) {
         _queue.async { [weak self] in
             guard let strongSelf = self else { completion?(nil, key, object); return }
             strongSelf.set(object: object, forKey: key, cost: cost)
@@ -263,7 +263,7 @@ public extension MemoryCache {
      Async search object according to unique key
      if find object, object will move to linked list head
      */
-    public func object(forKey key: String, completion: MemoryCacheAsyncCompletion?) {
+    func object(forKey key: String, completion: MemoryCacheAsyncCompletion?) {
         _queue.async { [weak self] in
             guard let strongSelf = self else { completion?(nil, key, nil); return }
             let object = strongSelf.object(forKey: key)
@@ -274,7 +274,7 @@ public extension MemoryCache {
     /**
      Async remove object according to unique key from cache dic and linked list
      */
-    public func removeObject(forKey key: String, completion: MemoryCacheAsyncCompletion?) {
+    func removeObject(forKey key: String, completion: MemoryCacheAsyncCompletion?) {
         _queue.async { [weak self] in
             guard let strongSelf = self else { completion?(nil, key, nil); return }
             strongSelf.removeObject(forKey: key)
@@ -285,7 +285,7 @@ public extension MemoryCache {
     /**
      Async remove all object and info from cache dic and clean linked list
      */
-    public func removeAllObjects(_ completion: MemoryCacheAsyncCompletion?) {
+    func removeAllObjects(_ completion: MemoryCacheAsyncCompletion?) {
         _queue.async { [weak self] in
             guard let strongSelf = self else { completion?(nil, nil, nil); return }
             strongSelf.removeAllObjects()
@@ -298,7 +298,7 @@ public extension MemoryCache {
      
      - parameter countLimit: maximum countLimit
      */
-    public func trim(toCount countLimit: UInt, completion: MemoryCacheAsyncCompletion?) {
+    func trim(toCount countLimit: UInt, completion: MemoryCacheAsyncCompletion?) {
         _queue.async { [weak self] in
             guard let strongSelf = self else { completion?(nil, nil, nil); return }
             strongSelf.trim(toCount: countLimit)
@@ -311,7 +311,7 @@ public extension MemoryCache {
      
      - parameter costLimit:  maximum costLimit
      */
-    public func trim(toCost costLimit: UInt, completion: MemoryCacheAsyncCompletion?) {
+    func trim(toCost costLimit: UInt, completion: MemoryCacheAsyncCompletion?) {
         _queue.async { [weak self] in
             guard let strongSelf = self else { completion?(nil, nil, nil); return }
             strongSelf.trim(toCost: costLimit)
@@ -324,7 +324,7 @@ public extension MemoryCache {
      
      - parameter ageLimit:  maximum ageLimit
      */
-    public func trim(toAge ageLimit: TimeInterval, completion: MemoryCacheAsyncCompletion?) {
+    func trim(toAge ageLimit: TimeInterval, completion: MemoryCacheAsyncCompletion?) {
         _queue.async { [weak self] in
             guard let strongSelf = self else { completion?(nil, nil, nil); return }
             strongSelf.trim(toAge: ageLimit)
@@ -336,7 +336,7 @@ public extension MemoryCache {
     /**
      Sync store an object for the unique key in memory cache and add object to linked list head
      */
-    public func set(object: AnyObject, forKey key: String, cost: UInt = 0) {
+    func set(object: AnyObject, forKey key: String, cost: UInt = 0) {
         _lock()
         _unsafeSet(object: object, forKey: key, cost: cost)
         _unlock()
@@ -347,7 +347,7 @@ public extension MemoryCache {
      if find object, object will move to linked list head
      */
     
-    public func object(forKey key: String) -> AnyObject? {
+    func object(forKey key: String) -> AnyObject? {
         var object: AnyObject? = nil
         _lock()
         let memoryObject: MemoryCacheObject? = _cache.object(forKey: key)
@@ -360,7 +360,7 @@ public extension MemoryCache {
     /**
      Sync remove object according to unique key from cache dic and linked list
      */
-    public func removeObject(forKey key: String) {
+    func removeObject(forKey key: String) {
         _lock()
         _ = _cache.removeObject(forKey:key)
         _unlock()
@@ -369,7 +369,7 @@ public extension MemoryCache {
     /**
      Sync remove all object and info from cache dic and clean linked list
      */
-    public func removeAllObjects() {
+    func removeAllObjects() {
         _lock()
         _cache.removeAllObjects()
         _unlock()
@@ -378,7 +378,7 @@ public extension MemoryCache {
     /**
      Sync trim memory cache totalcost to costLimit according LRU
      */
-    public func trim(toCount countLimit: UInt) {
+    func trim(toCount countLimit: UInt) {
         _lock()
         _unsafeTrim(toCount: countLimit)
         _unlock()
@@ -387,7 +387,7 @@ public extension MemoryCache {
     /**
      Sync trim memory cache totalcost to costLimit according LRU
      */
-    public func trim(toCost costLimit: UInt) {
+    func trim(toCost costLimit: UInt) {
         _lock()
         _unsafeTrim(toCost: costLimit)
         _unlock()
@@ -396,7 +396,7 @@ public extension MemoryCache {
     /**
      Sync trim memory cache objects which age greater than ageLimit
      */
-    public func trim(toAge ageLimit: TimeInterval) {
+    func trim(toAge ageLimit: TimeInterval) {
         _lock()
         _unsafeTrim(toAge: ageLimit)
         _unlock()
@@ -407,7 +407,7 @@ public extension MemoryCache {
      
      - parameter key: object unique key
      */
-    public subscript(key: String) -> AnyObject? {
+    subscript(key: String) -> AnyObject? {
         get {
             return object(forKey: key)
         }
