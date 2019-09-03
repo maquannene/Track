@@ -102,34 +102,10 @@ output: [("5", 5), ("4", 4), ("3", 3), ("2", 2), ("1", 1)]
 
 **CocoaPods**
 
-```ruby
-source 'https://github.com/CocoaPods/Specs.git'
-platform :ios, '8.0'
-use_frameworks!
-```
-
 Support Swift 3.0
 
 ```
 pod 'Track'
-```
-
-Support Swift 2.3
-
-```
-pod 'Track', :git => 'https://github.com/maquannene/Track.git', :branch => 'feature/S-2.3'
-```
-
-If you want to use the new features of Track
-
-```ruby
-pod 'Track', :git => 'https://github.com/maquannene/Track.git'
-```
-
-**Carthage**
-
-```ruby
-github "maquannene/Track"
 ```
 
 **Manually**
