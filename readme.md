@@ -102,10 +102,10 @@ output: [("5", 5), ("4", 4), ("3", 3), ("2", 2), ("1", 1)]
 
 **CocoaPods**
 
-Support Swift 3.0
+Support Swift 5.0
 
 ```
-pod 'Track'
+pod 'Track', :git => 'https://github.com/maquannene/Track.git', :branch => 'master'
 ```
 
 **Manually**
